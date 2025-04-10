@@ -11,6 +11,11 @@ export function MessageList({ messages }: MessageListProps) {
     return null;
   }
 
+  const cleanMessage = (message: WhatsAppMessage) => {
+    // Remove the R amount pattern from the message
+    return message.content.replace(/R\s*[0-9,]+(\.[0-9]{2})?/g, '').trim();
+  };
+
   return (
     <div className="w-full max-w-4xl mx-auto mt-8">
       <h2 className="text-2xl font-bold mb-4">Payment Messages</h2>
@@ -41,7 +46,7 @@ export function MessageList({ messages }: MessageListProps) {
                   R {message.amount.toFixed(2)}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-500">
-                  {message.content}
+                  {cleanMessage(message) || <em className="text-gray-400">No additional message</em>}
                 </td>
               </tr>
             ))}
