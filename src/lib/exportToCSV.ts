@@ -1,5 +1,5 @@
 import { unparse } from 'papaparse';
-import { WhatsAppMessage } from './parseChat';
+import { WhatsAppMessage, SUPPORTED_CURRENCIES } from './parseChat';
 
 export function exportToCSV(messages: WhatsAppMessage[]): void {
   const data = messages.map(msg => ({
@@ -7,6 +7,8 @@ export function exportToCSV(messages: WhatsAppMessage[]): void {
     Time: msg.timestamp.toLocaleTimeString(),
     Sender: msg.sender,
     Amount: msg.amount.toFixed(2),
+    Currency: msg.currency,
+    'Currency Symbol': SUPPORTED_CURRENCIES[msg.currency].symbol,
     Message: msg.content
   }));
 

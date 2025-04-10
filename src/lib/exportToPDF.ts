@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import { WhatsAppMessage } from './parseChat';
+import { WhatsAppMessage, SUPPORTED_CURRENCIES } from './parseChat';
 
 export function exportToPDF(messages: WhatsAppMessage[]): void {
   const doc = new jsPDF();
@@ -16,7 +16,7 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
   const data = messages.map(msg => [
     msg.timestamp.toLocaleDateString(),
     msg.sender,
-    msg.amount.toFixed(2),
+    `${SUPPORTED_CURRENCIES[msg.currency].symbol} ${msg.amount.toFixed(2)}`,
     msg.content.length > 40 ? msg.content.substring(0, 37) + '...' : msg.content
   ]);
   
@@ -24,7 +24,7 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
   const columns = [
     { header: 'Date', width: 25 },
     { header: 'Sender', width: 40 },
-    { header: 'Amount (R)', width: 25 },
+    { header: 'Amount', width: 25 },
     { header: 'Message', width: 100 }
   ];
   

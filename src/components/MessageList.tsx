@@ -1,6 +1,6 @@
 'use client';
 
-import { WhatsAppMessage } from '@/lib/parseChat';
+import { WhatsAppMessage, SUPPORTED_CURRENCIES } from '@/lib/parseChat';
 
 interface MessageListProps {
   messages: WhatsAppMessage[];
@@ -12,8 +12,20 @@ export function MessageList({ messages }: MessageListProps) {
   }
 
   const cleanMessage = (message: WhatsAppMessage) => {
-    // Remove the R amount pattern from the message
-    return message.content.replace(/R\s*[0-9,]+(\.[0-9]{2})?/g, '').trim();
+    // Remove any currency amount from the message
+    let cleanedMessage = message.content;
+    for (const { symbol } of Object.values(SUPPORTED_CURRENCIES)) {
+      cleanedMessage = cleanedMessage.replace(
+        new RegExp(`${symbol}\\s*[0-9,. ]+`, 'g'),
+        ''
+      );
+    }
+    return cleanedMessage.trim();
+  };
+
+  const formatAmount = (amount: number, currency: keyof typeof SUPPORTED_CURRENCIES) => {
+    const currencyInfo = SUPPORTED_CURRENCIES[currency];
+    return `${currencyInfo.symbol} ${amount.toFixed(2)}`;
   };
 
   return (
@@ -45,7 +57,7 @@ export function MessageList({ messages }: MessageListProps) {
                       {message.sender}
                     </td>
                     <td className="px-4 py-3 text-sm font-medium text-gray-900 whitespace-nowrap">
-                      R {message.amount.toFixed(2)}
+                      {formatAmount(message.amount, message.currency)}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500 min-w-[200px]">
                       {cleanMessage(message) || <em className="text-gray-400">No additional message</em>}
