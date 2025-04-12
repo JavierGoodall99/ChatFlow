@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { WhatsAppMessage } from '@/lib/parseChat';
 
@@ -8,6 +8,7 @@ interface UploadFormProps {
   onMessagesFound: (messages: WhatsAppMessage[]) => void;
 }
 
+// Utility function to ensure minimum loading time
 const withMinimumLoadingTime = async <T,>(
   promise: Promise<T>,
   minimumTime: number
@@ -27,6 +28,15 @@ export function UploadForm({ onMessagesFound }: UploadFormProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const FILE_UPLOAD_ID = 'file-upload';
+
+  // Reset file input when needed
+  useEffect(() => {
+    const fileInput = document.getElementById(FILE_UPLOAD_ID) as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }, [error]);
 
   const processFile = async (file: File) => {
     const text = await file.text();
@@ -45,8 +55,15 @@ export function UploadForm({ onMessagesFound }: UploadFormProps) {
       setIsLoading(true);
       setError(null);
       
+      // Process file with minimum 3 second loading time
       const messages = await withMinimumLoadingTime(processFile(file), 3000);
       onMessagesFound(messages);
+      
+      // Reset the file input after successful upload
+      const fileInput = document.getElementById(FILE_UPLOAD_ID) as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = '';
+      }
     } catch (error) {
       console.error('Error processing file:', error);
       setError(error instanceof Error ? error.message : 'Failed to process the file. Make sure it\'s a valid WhatsApp chat export.');
@@ -90,7 +107,7 @@ export function UploadForm({ onMessagesFound }: UploadFormProps) {
           type="file"
           accept=".txt"
           className="hidden"
-          id="file-upload"
+          id={FILE_UPLOAD_ID}
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (file) handleFileUpload(file);
@@ -100,13 +117,22 @@ export function UploadForm({ onMessagesFound }: UploadFormProps) {
         
         <div className="relative">
           <Button
-            onClick={() => document.getElementById('file-upload')?.click()}
+            onClick={() => document.getElementById(FILE_UPLOAD_ID)?.click()}
             variant="outline"
             className="mt-2"
             disabled={isLoading}
           >
             {isLoading ? 'Processing...' : 'Select File'}
           </Button>
+
+          {isLoading && (
+            <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
+              <div className="flex items-center gap-2">
+                <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+                <span className="text-sm text-gray-600">Processing your chat file...</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {error && (
