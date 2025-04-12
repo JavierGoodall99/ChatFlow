@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://whatsapp-receipt-cleaner.vercel.app
+
+# Sitemaps
+Sitemap: https://whatsapp-receipt-cleaner.vercel.app/sitemap.xml
