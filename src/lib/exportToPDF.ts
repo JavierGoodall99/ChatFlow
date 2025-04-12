@@ -2,6 +2,28 @@ import jsPDF from 'jspdf';
 import { WhatsAppMessage, SUPPORTED_CURRENCIES } from './parseChat';
 import { format } from 'date-fns';
 
+// Helper function to split text into lines based on available width
+function getLines(doc: jsPDF, text: string, maxWidth: number): string[] {
+  const words = text.split(' ');
+  const lines: string[] = [];
+  let currentLine = words[0];
+
+  for (let i = 1; i < words.length; i++) {
+    const word = words[i];
+    const width = doc.getStringUnitWidth(currentLine + ' ' + word) * doc.getFontSize() / doc.internal.scaleFactor;
+    
+    if (width < maxWidth) {
+      currentLine += ' ' + word;
+    } else {
+      lines.push(currentLine);
+      currentLine = word;
+    }
+  }
+  
+  lines.push(currentLine);
+  return lines;
+}
+
 export function exportToPDF(messages: WhatsAppMessage[]): void {
   // Create PDF document in portrait mode
   const doc = new jsPDF({
@@ -41,10 +63,10 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
   
   // Calculate column widths based on table width
   const columns = [
-    { header: 'Date', width: tableWidth * 0.20 },
-    { header: 'Sender', width: tableWidth * 0.25 },
+    { header: 'Date', width: tableWidth * 0.15 },
+    { header: 'Sender', width: tableWidth * 0.20 },
     { header: 'Amount', width: tableWidth * 0.15 },
-    { header: 'Message', width: tableWidth * 0.40 }
+    { header: 'Message', width: tableWidth * 0.50 } // Increased message column width
   ];
   
   // Calculate totals by currency
@@ -55,82 +77,81 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
     }
     totals[msg.currency] += msg.amount;
   });
-  
-  // Format data for table
-  const data = messages.map(msg => [
-    format(msg.timestamp, 'dd MMM yyyy'),
-    msg.sender,
-    `${SUPPORTED_CURRENCIES[msg.currency].symbol}${msg.amount.toFixed(2)}`,
-    msg.content.length > 50 ? msg.content.substring(0, 47) + '...' : msg.content
-  ]);
-  
+
   let currentY = startY;
   
   // Table header style
-  doc.setFillColor(243, 244, 246); // Gray-100
-  doc.rect(margin, currentY - 6, tableWidth, 8, 'F');
-  doc.setDrawColor(229, 231, 235); // Gray-200
-  doc.line(margin, currentY - 6, margin + tableWidth, currentY - 6);
-  doc.line(margin, currentY + 2, margin + tableWidth, currentY + 2);
-  
-  // Draw headers
-  doc.setTextColor(17, 24, 39); // Gray-900
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  
-  let xPos = margin;
-  columns.forEach(col => {
-    doc.text(col.header, xPos + 1, currentY);
-    xPos += col.width;
-  });
-  
-  currentY += 8;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  
-  // Draw data rows
-  data.forEach((row, i) => {
-    // Check if we need a new page
-    if (currentY > doc.internal.pageSize.height - 25) {
-      doc.addPage();
-      // Add light header to new page
-      doc.setFillColor(243, 244, 246); // Gray-100
-      doc.rect(margin, 10, tableWidth, 8, 'F');
-      doc.setDrawColor(229, 231, 235); // Gray-200
-      doc.line(margin, 10, margin + tableWidth, 10);
-      doc.line(margin, 18, margin + tableWidth, 18);
-      
-      doc.setTextColor(17, 24, 39); // Gray-900
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(11);
-      
-      let headerX = margin;
-      columns.forEach(col => {
-        doc.text(col.header, headerX + 1, 16);
-        headerX += col.width;
-      });
-      
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(10);
-      currentY = 25;
-    }
-
-    // Alternating row background
-    if (i % 2 === 0) {
-      doc.setFillColor(249, 250, 251); // Gray-50
-      doc.rect(margin, currentY - 4, tableWidth, 7, 'F');
-    }
+  const drawTableHeader = () => {
+    doc.setFillColor(243, 244, 246); // Gray-100
+    doc.rect(margin, currentY - 6, tableWidth, 8, 'F');
+    doc.setDrawColor(229, 231, 235); // Gray-200
+    doc.line(margin, currentY - 6, margin + tableWidth, currentY - 6);
+    doc.line(margin, currentY + 2, margin + tableWidth, currentY + 2);
     
-    // Draw row content
-    let x = margin;
-    row.forEach((cell, j) => {
-      const color = j === 2 ? [5, 150, 105] as const : [55, 65, 81] as const;
-      doc.setTextColor(color[0], color[1], color[2]); // Green-700 for amounts, Gray-700 for other text
-      doc.text(String(cell), x + 1, currentY);
-      x += columns[j].width;
+    doc.setTextColor(17, 24, 39); // Gray-900
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    
+    let xPos = margin;
+    columns.forEach(col => {
+      doc.text(col.header, xPos + 1, currentY);
+      xPos += col.width;
     });
     
-    currentY += 7;
+    currentY += 8;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+  };
+
+  drawTableHeader();
+
+  // Draw data rows
+  messages.forEach((msg, i) => {
+    // Format row data
+    const rowData = [
+      format(msg.timestamp, 'dd MMM yyyy'),
+      msg.sender,
+      `${SUPPORTED_CURRENCIES[msg.currency].symbol}${msg.amount.toFixed(2)}`,
+      msg.content
+    ];
+
+    // Calculate needed height for message content
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    const messageLines = getLines(doc, msg.content, columns[3].width - 2);
+    const rowHeight = Math.max(7, messageLines.length * 5 + 2); // Minimum 7mm height
+
+    // Check if we need a new page
+    if (currentY + rowHeight > doc.internal.pageSize.height - 25) {
+      doc.addPage();
+      currentY = 25;
+      drawTableHeader();
+    }
+
+    // Draw row background for alternating rows
+    if (i % 2 === 0) {
+      doc.setFillColor(249, 250, 251); // Gray-50
+      doc.rect(margin, currentY - 4, tableWidth, rowHeight, 'F');
+    }
+
+    // Draw row content
+    let x = margin;
+    rowData.forEach((cell, j) => {
+      const color = j === 2 ? [5, 150, 105] as const : [55, 65, 81] as const;
+      doc.setTextColor(color[0], color[1], color[2]); // Green-700 for amounts, Gray-700 for other text
+      
+      if (j === 3) { // Message column
+        // Draw wrapped text
+        messageLines.forEach((line, lineIndex) => {
+          doc.text(line, x + 1, currentY + (lineIndex * 5));
+        });
+      } else {
+        doc.text(String(cell), x + 1, currentY);
+      }
+      x += columns[j].width;
+    });
+
+    currentY += rowHeight;
   });
 
   // Add totals section
@@ -163,6 +184,7 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
   
   // Add footer with page numbers
   const pageCount = doc.internal.pages.length - 1;
+  
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(107, 114, 128); // Gray-500
