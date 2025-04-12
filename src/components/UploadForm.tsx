@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { WhatsAppMessage } from '@/lib/parseChat';
 
 interface UploadFormProps {
@@ -86,21 +85,33 @@ export function UploadForm({ onMessagesFound }: UploadFormProps) {
 
   return (
     <div 
-      className={`w-full max-w-xl mx-auto p-8 border-2 border-dashed rounded-lg
-        ${isDragging ? 'border-primary bg-primary/10' : 'border-gray-300'}
+      className={`w-full max-w-xl mx-auto p-8 border-2 border-dashed rounded-xl 
+        ${isDragging ? 'border-primary bg-primary/10' : 'border-gray-300 hover:border-primary/50 hover:bg-gray-50'}
         ${isLoading ? 'opacity-75' : ''}
-        transition-all duration-200`}
+        transition-all duration-300 cursor-pointer`}
       onDragOver={(e) => {
         e.preventDefault();
         setIsDragging(true);
       }}
       onDragLeave={() => setIsDragging(false)}
       onDrop={handleDrop}
+      onClick={() => !isLoading && document.getElementById(FILE_UPLOAD_ID)?.click()}
     >
       <div className="text-center">
+        <div className="mb-4">
+          <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+          </div>
+        </div>
+        
         <h2 className="text-xl font-semibold mb-2">Upload WhatsApp Chat</h2>
-        <p className="text-sm text-gray-600 mb-4">
-          Drag and drop your WhatsApp chat export (.txt) here
+        <p className="text-gray-600 mb-4">
+          <span className="block mb-1">Drag and drop your WhatsApp chat export (.txt) here</span>
+          <span className="text-sm opacity-80">or click to browse files</span>
         </p>
         
         <input
@@ -115,30 +126,31 @@ export function UploadForm({ onMessagesFound }: UploadFormProps) {
           disabled={isLoading}
         />
         
-        <div className="relative">
-          <Button
-            onClick={() => document.getElementById(FILE_UPLOAD_ID)?.click()}
-            variant="outline"
-            className="mt-2"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Processing...' : 'Select File'}
-          </Button>
-
-          {isLoading && (
-            <div className="absolute -bottom-12 left-1/2 transform -translate-x-1/2">
-              <div className="flex items-center gap-2">
-                <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
-                <span className="text-sm text-gray-600">Processing your chat file...</span>
-              </div>
+        <div className="flex justify-center">
+          {isLoading ? (
+            <div className="flex items-center gap-3 px-4 py-2 rounded-md bg-gray-50 border border-gray-200">
+              <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
+              <span className="text-gray-600">Processing your chat file...</span>
             </div>
+          ) : (
+            <div className="text-xs text-gray-500 mt-2">All processing happens in your browser. Your data stays private.</div>
           )}
         </div>
 
         {error && (
-          <p className="mt-4 text-sm text-red-500">
-            {error}
-          </p>
+          <div className="mt-4 bg-red-50 text-red-500 p-3 rounded-lg border border-red-200 max-w-md mx-auto">
+            <div className="flex items-center gap-2 mb-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span className="font-medium">Error</span>
+            </div>
+            <p className="text-sm">
+              {error}
+            </p>
+          </div>
         )}
       </div>
     </div>
