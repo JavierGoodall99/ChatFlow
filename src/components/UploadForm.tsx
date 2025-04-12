@@ -8,34 +8,48 @@ interface UploadFormProps {
   onMessagesFound: (messages: WhatsAppMessage[]) => void;
 }
 
+const withMinimumLoadingTime = async <T,>(
+  promise: Promise<T>,
+  minimumTime: number
+): Promise<T> => {
+  const startTime = Date.now();
+  const result = await promise;
+  const elapsedTime = Date.now() - startTime;
+  
+  if (elapsedTime < minimumTime) {
+    await new Promise(resolve => setTimeout(resolve, minimumTime - elapsedTime));
+  }
+  
+  return result;
+};
+
 export function UploadForm({ onMessagesFound }: UploadFormProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const processFile = async (file: File) => {
+    const text = await file.text();
+    const { parseChat } = await import('@/lib/parseChat');
+    const messages = parseChat(text);
+    
+    if (messages.length === 0) {
+      throw new Error('No payment messages found in the chat. Make sure the file contains messages with currency amounts.');
+    }
+    
+    return messages;
+  };
 
   const handleFileUpload = async (file: File) => {
     try {
       setIsLoading(true);
       setError(null);
       
-      console.log('Reading file:', file.name, 'Size:', file.size);
-      const text = await file.text();
-      console.log('File content length:', text.length);
-      console.log('First 100 chars:', text.substring(0, 100));
-      
-      const { parseChat } = await import('@/lib/parseChat');
-      const messages = parseChat(text);
-      console.log('Found messages:', messages.length);
-      
-      if (messages.length === 0) {
-        setError('No payment messages found in the chat. Make sure the file contains messages with Rand amounts (e.g., "R250.00")');
-        return;
-      }
-      
+      const messages = await withMinimumLoadingTime(processFile(file), 3000);
       onMessagesFound(messages);
     } catch (error) {
       console.error('Error processing file:', error);
-      setError('Failed to process the file. Make sure it\'s a valid WhatsApp chat export.');
+      setError(error instanceof Error ? error.message : 'Failed to process the file. Make sure it\'s a valid WhatsApp chat export.');
     } finally {
       setIsLoading(false);
     }
@@ -57,7 +71,8 @@ export function UploadForm({ onMessagesFound }: UploadFormProps) {
     <div 
       className={`w-full max-w-xl mx-auto p-8 border-2 border-dashed rounded-lg
         ${isDragging ? 'border-primary bg-primary/10' : 'border-gray-300'}
-        transition-colors duration-200`}
+        ${isLoading ? 'opacity-75' : ''}
+        transition-all duration-200`}
       onDragOver={(e) => {
         e.preventDefault();
         setIsDragging(true);
@@ -83,24 +98,20 @@ export function UploadForm({ onMessagesFound }: UploadFormProps) {
           disabled={isLoading}
         />
         
-        <Button
-          onClick={() => document.getElementById('file-upload')?.click()}
-          variant="outline"
-          className="mt-2"
-          disabled={isLoading}
-        >
-          {isLoading ? 'Processing...' : 'Select File'}
-        </Button>
+        <div className="relative">
+          <Button
+            onClick={() => document.getElementById('file-upload')?.click()}
+            variant="outline"
+            className="mt-2"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Processing...' : 'Select File'}
+          </Button>
+        </div>
 
         {error && (
           <p className="mt-4 text-sm text-red-500">
             {error}
-          </p>
-        )}
-
-        {isLoading && (
-          <p className="mt-4 text-sm text-gray-600">
-            Processing your chat file...
           </p>
         )}
       </div>
