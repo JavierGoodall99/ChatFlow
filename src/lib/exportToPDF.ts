@@ -140,13 +140,25 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
     { header: 'Message', width: tableWidth * 0.50 } // Increased message column width
   ];
   
-  // Calculate totals by currency
+  // Calculate totals by currency and sender
   const totals: Record<string, number> = {};
+  const senderTotals: Record<string, Record<string, number>> = {};
+  
   messages.forEach(msg => {
+    // Currency totals
     if (!totals[msg.currency]) {
       totals[msg.currency] = 0;
     }
     totals[msg.currency] += msg.amount;
+    
+    // Sender totals by currency
+    if (!senderTotals[msg.sender]) {
+      senderTotals[msg.sender] = {};
+    }
+    if (!senderTotals[msg.sender][msg.currency]) {
+      senderTotals[msg.sender][msg.currency] = 0;
+    }
+    senderTotals[msg.sender][msg.currency] += msg.amount;
   });
 
   let currentY = startY;
@@ -225,32 +237,109 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
     currentY += rowHeight;
   });
 
-  // Add totals section
-  currentY += 5;
-  doc.setDrawColor(229, 231, 235); // Gray-200
-  doc.line(margin, currentY - 2, margin + tableWidth, currentY - 2);
+  // Add summary section with enhanced styling
+  currentY += 10;
   
+  // Add summary header with background
+  doc.setFillColor(39, 39, 42); // Zinc-800
+  doc.rect(margin, currentY - 6, tableWidth, 10, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.text(sanitizeText('PAYMENT SUMMARY'), margin + 5, currentY);
+  
+  currentY += 10;
+  
+  // Set up two-column layout for summary
+  const colWidth = tableWidth / 2 - 5;
+  
+  // Left column: Currency totals
+  doc.setFillColor(243, 244, 246); // Gray-100
+  doc.rect(margin, currentY - 6, colWidth, 8, 'F');
+  doc.setTextColor(17, 24, 39); // Gray-900
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
-  doc.setTextColor(17, 24, 39); // Gray-900
-  doc.text(sanitizeText('Summary'), margin, currentY + 5);
-
-  currentY += 10;
-  doc.setFont('helvetica', 'normal');
+  doc.text(sanitizeText('TOTAL BY CURRENCY'), margin + 5, currentY);
   
-  // Display totals by currency
-  Object.entries(totals).forEach(([currency, amount]) => {
+  currentY += 8;
+  
+  // Format currency totals
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  
+  const maxCurrencyY = currentY;
+  Object.entries(totals).forEach(([currency, amount], index) => {
     const symbol = SUPPORTED_CURRENCIES[currency as keyof typeof SUPPORTED_CURRENCIES].symbol;
     const currencyName = SUPPORTED_CURRENCIES[currency as keyof typeof SUPPORTED_CURRENCIES].name;
     
+    // Add alternating row colors for readability
+    if (index % 2 === 0) {
+      doc.setFillColor(249, 250, 251); // Gray-50
+      doc.rect(margin, currentY - 4, colWidth, 7, 'F');
+    }
+    
     doc.setTextColor(55, 65, 81); // Gray-700
-    doc.text(sanitizeText(`Total ${currencyName}:`), margin, currentY);
+    doc.text(sanitizeText(currencyName), margin + 5, currentY);
     
     doc.setTextColor(5, 150, 105); // Green-700
     doc.setFont('helvetica', 'bold');
-    doc.text(`${symbol}${amount.toFixed(2)}`, margin + 60, currentY);
+    doc.text(`${symbol}${amount.toFixed(2)}`, margin + colWidth - 25, currentY, { align: 'right' });
+    doc.setFont('helvetica', 'normal');
     
     currentY += 7;
+  });
+  
+  // Right column: Sender totals
+  const rightColX = margin + colWidth + 10;
+  currentY = maxCurrencyY - 8; // Reset Y position for the right column
+  
+  doc.setFillColor(243, 244, 246); // Gray-100
+  doc.rect(rightColX, currentY - 6, colWidth, 8, 'F');
+  doc.setTextColor(17, 24, 39); // Gray-900 
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text(sanitizeText('TOTAL BY SENDER'), rightColX + 5, currentY);
+  
+  currentY += 8;
+  
+  // Format sender totals
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  
+  let senderRowIndex = 0;
+  Object.entries(senderTotals).forEach(([sender, currencies]) => {
+    // Add sender name with background
+    if (senderRowIndex % 2 === 0) {
+      doc.setFillColor(243, 244, 246); // Gray-100
+    } else {
+      doc.setFillColor(249, 250, 251); // Gray-50
+    }
+    doc.rect(rightColX, currentY - 4, colWidth, 7, 'F');
+    
+    doc.setTextColor(17, 24, 39); // Gray-900
+    doc.setFont('helvetica', 'bold');
+    doc.text(sanitizeText(sender), rightColX + 5, currentY);
+    doc.setFont('helvetica', 'normal');
+    
+    currentY += 7;
+    
+    // Add currencies for this sender with indent
+    Object.entries(currencies).forEach(([currency, amount]) => {
+      const symbol = SUPPORTED_CURRENCIES[currency as keyof typeof SUPPORTED_CURRENCIES].symbol;
+      const currencyName = SUPPORTED_CURRENCIES[currency as keyof typeof SUPPORTED_CURRENCIES].name;
+      
+      doc.setTextColor(55, 65, 81); // Gray-700
+      doc.text(sanitizeText(currencyName), rightColX + 15, currentY);
+      
+      doc.setTextColor(5, 150, 105); // Green-700
+      doc.setFont('helvetica', 'bold');
+      doc.text(`${symbol}${amount.toFixed(2)}`, rightColX + colWidth - 15, currentY, { align: 'right' });
+      doc.setFont('helvetica', 'normal');
+      
+      currentY += 7;
+    });
+    
+    senderRowIndex++;
   });
   
   // Add footer with page numbers
