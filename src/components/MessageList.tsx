@@ -12,15 +12,7 @@ export function MessageList({ messages }: MessageListProps) {
   }
 
   const cleanMessage = (message: WhatsAppMessage) => {
-    // Remove any currency amount from the message
-    let cleanedMessage = message.content;
-    for (const { symbol } of Object.values(SUPPORTED_CURRENCIES)) {
-      cleanedMessage = cleanedMessage.replace(
-        new RegExp(`${symbol}\\s*[0-9,. ]+`, 'g'),
-        ''
-      );
-    }
-    return cleanedMessage.trim();
+    return message.content.trim();
   };
 
   const formatAmount = (amount: number, currency: keyof typeof SUPPORTED_CURRENCIES) => {
