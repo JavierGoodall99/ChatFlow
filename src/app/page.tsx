@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { UploadForm } from '@/components/UploadForm';
 import { MessageList } from '@/components/MessageList';
 import { ExportButtons } from '@/components/ExportButtons';
@@ -26,12 +27,14 @@ export default function Home() {
       <div className="max-w-7xl mx-auto">
         <header className="mb-12 text-center">
           <div className="flex justify-center">
-            <div className="bg-green-500 p-3 rounded-full mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                <line x1="9" y1="10" x2="15" y2="10"></line>
-                <line x1="12" y1="7" x2="12" y2="13"></line>
-              </svg>
+            <div>
+              <Image
+                src="/icon.png"
+                alt="WhatsApp Receipt Cleaner Icon"
+                width={80}
+                height={80}
+                priority
+              />
             </div>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
