@@ -2,11 +2,68 @@ import jsPDF from 'jspdf';
 import { WhatsAppMessage, SUPPORTED_CURRENCIES } from './parseChat';
 import { format } from 'date-fns';
 
+// Helper function to clean and encode text for PDF
+function sanitizeText(text: string): string {
+  // First normalize text to decompose Unicode characters
+  return text
+    .normalize('NFKD')
+    .replace(/[\u0080-\uFFFF]/g, (ch) => {
+      // Comprehensive special character mapping
+      const specialChars: Record<string, string> = {
+        'Ø': 'O',
+        'þ': 'th',
+        'Þ': 'Th',
+        'æ': 'ae',
+        'Æ': 'AE',
+        'œ': 'oe',
+        'Œ': 'OE',
+        'ß': 'ss',
+        '™': '(TM)',
+        '©': '(c)',
+        '®': '(R)',
+        '°': 'deg',
+        '±': '+/-',
+        '×': 'x',
+        '÷': '/',
+        '•': '*',
+        '…': '...',
+        '—': '-',
+        '–': '-',
+        "''": "'",
+        "'": "'",
+        '"': '"',
+        '«': '<<',
+        '»': '>>',
+        '≤': '<=',
+        '≥': '>=',
+        '≠': '!=',
+        '≈': '~',
+        '∑': 'sum',
+        '∏': 'prod',
+        '∂': 'd',
+        '∆': 'delta',
+        'π': 'pi',
+        'µ': 'u',
+        '€': 'EUR',
+        '£': 'GBP',
+        '¥': 'JPY',
+        '¢': 'c',
+        '†': '+',
+        '‡': '++',
+        '§': 'S',
+        '¶': 'P'
+      };
+      return specialChars[ch] || ch.normalize('NFKD').replace(/[^\x00-\x7F]/g, '');
+    })
+    .replace(/[^\x20-\x7E]/g, ''); // Remove any remaining non-printable ASCII chars
+}
+
 // Helper function to split text into lines based on available width
 function getLines(doc: jsPDF, text: string, maxWidth: number): string[] {
-  const words = text.split(' ');
+  const sanitizedText = sanitizeText(text);
+  const words = sanitizedText.split(' ');
   const lines: string[] = [];
-  let currentLine = words[0];
+  let currentLine = words[0] || '';
 
   for (let i = 1; i < words.length; i++) {
     const word = words[i];
@@ -20,17 +77,32 @@ function getLines(doc: jsPDF, text: string, maxWidth: number): string[] {
     }
   }
   
-  lines.push(currentLine);
+  if (currentLine) {
+    lines.push(currentLine);
+  }
   return lines;
 }
 
-export function exportToPDF(messages: WhatsAppMessage[]): void {
-  // Create PDF document in portrait mode
+// Initialize PDF document with proper font settings
+function initializeDocument(): jsPDF {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
-    format: 'a4'
+    format: 'a4',
+    putOnlyUsedFonts: true,
+    floatPrecision: 16 // Increase precision for better text measurement
   });
+
+  // Force embed complete font
+  doc.setFont('helvetica', 'normal', 'normal');
+  doc.setR2L(false); // Ensure left-to-right text
+  doc.setLanguage('en-US');
+
+  return doc;
+}
+
+export function exportToPDF(messages: WhatsAppMessage[]): void {
+  const doc = initializeDocument();
   
   // Set document metadata
   doc.setProperties({
@@ -41,19 +113,18 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
     creator: 'WhatsApp Receipt Cleaner'
   });
   
-  // Add document title
+  // Add document title with proper font settings
   doc.setFillColor(39, 39, 42); // Zinc-800
   doc.rect(0, 0, doc.internal.pageSize.width, 20, 'F');
   doc.setTextColor(255, 255, 255);
-  doc.setFont('helvetica', 'bold');
   doc.setFontSize(16);
-  doc.text('WhatsApp Payment Records', 10, 13);
+  doc.text(sanitizeText('WhatsApp Payment Records'), 10, 13);
   
   // Add export date
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   const exportDate = format(new Date(), "MMMM d, yyyy 'at' h:mm a");
-  doc.text(`Generated on ${exportDate}`, doc.internal.pageSize.width - 15, 13, { align: 'right' });
+  doc.text(sanitizeText(`Generated on ${exportDate}`), doc.internal.pageSize.width - 15, 13, { align: 'right' });
   
   // Set up table settings
   const startY = 30;
@@ -94,7 +165,7 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
     
     let xPos = margin;
     columns.forEach(col => {
-      doc.text(col.header, xPos + 1, currentY);
+      doc.text(sanitizeText(col.header), xPos + 1, currentY);
       xPos += col.width;
     });
     
@@ -107,19 +178,20 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
 
   // Draw data rows
   messages.forEach((msg, i) => {
-    // Format row data
+    // Format row data with sanitized text
     const rowData = [
       format(msg.timestamp, 'dd MMM yyyy'),
-      msg.sender,
+      sanitizeText(msg.sender),
       `${SUPPORTED_CURRENCIES[msg.currency].symbol}${msg.amount.toFixed(2)}`,
-      msg.content
+      sanitizeText(msg.content)
     ];
 
     // Calculate needed height for message content
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     const messageLines = getLines(doc, msg.content, columns[3].width - 2);
-    const rowHeight = Math.max(7, messageLines.length * 5 + 2); // Minimum 7mm height
+    const lineHeight = 5; // Standard line height in mm
+    const rowHeight = Math.max(7, messageLines.length * lineHeight + 2); // Minimum 7mm height
 
     // Check if we need a new page
     if (currentY + rowHeight > doc.internal.pageSize.height - 25) {
@@ -134,16 +206,15 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
       doc.rect(margin, currentY - 4, tableWidth, rowHeight, 'F');
     }
 
-    // Draw row content
+    // Draw row content with improved text handling
     let x = margin;
     rowData.forEach((cell, j) => {
       const color = j === 2 ? [5, 150, 105] as const : [55, 65, 81] as const;
-      doc.setTextColor(color[0], color[1], color[2]); // Green-700 for amounts, Gray-700 for other text
+      doc.setTextColor(color[0], color[1], color[2]);
       
       if (j === 3) { // Message column
-        // Draw wrapped text
         messageLines.forEach((line, lineIndex) => {
-          doc.text(line, x + 1, currentY + (lineIndex * 5));
+          doc.text(line, x + 1, currentY + (lineIndex * lineHeight));
         });
       } else {
         doc.text(String(cell), x + 1, currentY);
@@ -162,7 +233,7 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(11);
   doc.setTextColor(17, 24, 39); // Gray-900
-  doc.text('Summary', margin, currentY + 5);
+  doc.text(sanitizeText('Summary'), margin, currentY + 5);
 
   currentY += 10;
   doc.setFont('helvetica', 'normal');
@@ -173,7 +244,7 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
     const currencyName = SUPPORTED_CURRENCIES[currency as keyof typeof SUPPORTED_CURRENCIES].name;
     
     doc.setTextColor(55, 65, 81); // Gray-700
-    doc.text(`Total ${currencyName}:`, margin, currentY);
+    doc.text(sanitizeText(`Total ${currencyName}:`), margin, currentY);
     
     doc.setTextColor(5, 150, 105); // Green-700
     doc.setFont('helvetica', 'bold');
@@ -192,7 +263,7 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.text(
-      `Page ${i} of ${pageCount} | Generated by WhatsApp Receipt Cleaner`,
+      sanitizeText(`Page ${i} of ${pageCount} | Generated by WhatsApp Receipt Cleaner`),
       pageWidth / 2,
       doc.internal.pageSize.height - 10,
       { align: 'center' }
@@ -201,7 +272,7 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
   
   // Generate filename with date
   const dateStr = format(new Date(), 'yyyy-MM-dd');
-  const filename = `whatsapp-payments-${dateStr}.pdf`;
+  const filename = sanitizeText(`whatsapp-payments-${dateStr}.pdf`);
   
   // Save the PDF
   doc.save(filename);
