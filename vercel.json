@@ -1,5 +1,4 @@
 {
-  "compress": true,
   "headers": [
     {
       "source": "/(.*)",
