@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import { WhatsAppMessage, SUPPORTED_CURRENCIES } from './parseChat';
+import { WhatsAppMessage, SUPPORTED_CURRENCIES, CurrencyCode } from './parseChat';
 import { format } from 'date-fns';
 
 // Helper function to clean and encode text for PDF
@@ -51,11 +51,38 @@ function sanitizeText(text: string): string {
         '†': '+',
         '‡': '++',
         '§': 'S',
-        '¶': 'P'
+        '¶': 'P',
+        // Cyrillic characters
+        'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ж': 'Zh',
+        'З': 'Z', 'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M', 'Н': 'N',
+        'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U', 'Ф': 'F',
+        'Х': 'Kh', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh', 'Щ': 'Shch', 'Ъ': '', 'Ы': 'Y',
+        'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya',
+        'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ж': 'zh',
+        'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n',
+        'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f',
+        'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'shch', 'ъ': '', 'ы': 'y',
+        'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+        // Common diacritics
+        'á': 'a', 'à': 'a', 'â': 'a', 'ä': 'a', 'ã': 'a', 'å': 'a',
+        'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
+        'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
+        'ó': 'o', 'ò': 'o', 'ô': 'o', 'ö': 'o', 'õ': 'o', 'ø': 'o',
+        'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
+        'ÿ': 'y', 'ñ': 'n', 'ç': 'c'
       };
       return specialChars[ch] || ch.normalize('NFKD').replace(/[^\x00-\x7F]/g, '');
     })
     .replace(/[^\x20-\x7E]/g, ''); // Remove any remaining non-printable ASCII chars
+}
+
+// Format amount with proper currency symbol
+function formatCurrency(amount: number, currency: CurrencyCode): string {
+  const currencyInfo = SUPPORTED_CURRENCIES[currency];
+  return `${currencyInfo.symbol}${amount.toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })}`;
 }
 
 // Helper function to split text into lines based on available width
@@ -136,8 +163,9 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
   const columns = [
     { header: 'Date', width: tableWidth * 0.15 },
     { header: 'Sender', width: tableWidth * 0.20 },
+    { header: 'Currency', width: tableWidth * 0.10 },
     { header: 'Amount', width: tableWidth * 0.15 },
-    { header: 'Message', width: tableWidth * 0.50 } // Increased message column width
+    { header: 'Message', width: tableWidth * 0.40 } // Adjusted message column width
   ];
   
   // Calculate totals by currency and sender
@@ -194,14 +222,15 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
     const rowData = [
       format(msg.timestamp, 'dd MMM yyyy'),
       sanitizeText(msg.sender),
-      `${SUPPORTED_CURRENCIES[msg.currency].symbol}${msg.amount.toFixed(2)}`,
+      SUPPORTED_CURRENCIES[msg.currency].symbol,
+      msg.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       sanitizeText(msg.content)
     ];
 
     // Calculate needed height for message content
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    const messageLines = getLines(doc, msg.content, columns[3].width - 2);
+    const messageLines = getLines(doc, msg.content, columns[4].width - 2);
     const lineHeight = 5; // Standard line height in mm
     const rowHeight = Math.max(7, messageLines.length * lineHeight + 2); // Minimum 7mm height
 
@@ -221,10 +250,11 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
     // Draw row content with improved text handling
     let x = margin;
     rowData.forEach((cell, j) => {
-      const color = j === 2 ? [5, 150, 105] as const : [55, 65, 81] as const;
+      // Set color based on column (make amount green)
+      const color = j === 3 ? [5, 150, 105] as const : [55, 65, 81] as const;
       doc.setTextColor(color[0], color[1], color[2]);
       
-      if (j === 3) { // Message column
+      if (j === 4) { // Message column
         messageLines.forEach((line, lineIndex) => {
           doc.text(line, x + 1, currentY + (lineIndex * lineHeight));
         });
@@ -269,8 +299,8 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
   
   const maxCurrencyY = currentY;
   Object.entries(totals).forEach(([currency, amount], index) => {
-    const symbol = SUPPORTED_CURRENCIES[currency as keyof typeof SUPPORTED_CURRENCIES].symbol;
-    const currencyName = SUPPORTED_CURRENCIES[currency as keyof typeof SUPPORTED_CURRENCIES].name;
+    const currencyCode = currency as CurrencyCode;
+    const currencyName = SUPPORTED_CURRENCIES[currencyCode].name;
     
     // Add alternating row colors for readability
     if (index % 2 === 0) {
@@ -283,7 +313,7 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
     
     doc.setTextColor(5, 150, 105); // Green-700
     doc.setFont('helvetica', 'bold');
-    doc.text(`${symbol}${amount.toFixed(2)}`, margin + colWidth - 25, currentY, { align: 'right' });
+    doc.text(formatCurrency(amount, currencyCode), margin + colWidth - 25, currentY, { align: 'right' });
     doc.setFont('helvetica', 'normal');
     
     currentY += 7;
@@ -325,15 +355,15 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
     
     // Add currencies for this sender with indent
     Object.entries(currencies).forEach(([currency, amount]) => {
-      const symbol = SUPPORTED_CURRENCIES[currency as keyof typeof SUPPORTED_CURRENCIES].symbol;
-      const currencyName = SUPPORTED_CURRENCIES[currency as keyof typeof SUPPORTED_CURRENCIES].name;
+      const currencyCode = currency as CurrencyCode;
+      const currencyName = SUPPORTED_CURRENCIES[currencyCode].name;
       
       doc.setTextColor(55, 65, 81); // Gray-700
       doc.text(sanitizeText(currencyName), rightColX + 15, currentY);
       
       doc.setTextColor(5, 150, 105); // Green-700
       doc.setFont('helvetica', 'bold');
-      doc.text(`${symbol}${amount.toFixed(2)}`, rightColX + colWidth - 15, currentY, { align: 'right' });
+      doc.text(formatCurrency(amount, currencyCode), rightColX + colWidth - 15, currentY, { align: 'right' });
       doc.setFont('helvetica', 'normal');
       
       currentY += 7;
@@ -342,7 +372,7 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
     senderRowIndex++;
   });
   
-  // Add footer with page numbers
+  // Add footer with page numbers and language note
   const pageCount = doc.internal.pages.length - 1;
   
   doc.setFont('helvetica', 'normal');

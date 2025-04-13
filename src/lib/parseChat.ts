@@ -1,13 +1,67 @@
 import { z } from "zod";
 
-// Define supported currencies
+// Define supported currencies with expanded format support
 export const SUPPORTED_CURRENCIES = {
-  ZAR: { symbol: 'R', name: 'South African Rand' },
-  USD: { symbol: '$', name: 'US Dollar' },
-  EUR: { symbol: '€', name: 'Euro' },
-  GBP: { symbol: '£', name: 'British Pound' },
-  AUD: { symbol: 'A$', name: 'Australian Dollar' },
-  INR: { symbol: '₹', name: 'Indian Rupee' },
+  ZAR: { 
+    symbol: 'R', 
+    name: 'South African Rand',
+    altFormats: ['ZAR', 'R$', 'RAND', 'РЭНД', 'ЮАР']
+  },
+  USD: { 
+    symbol: '$', 
+    name: 'US Dollar',
+    altFormats: ['USD', 'US$', 'DOLLAR', 'ДОЛЛ', 'ДОЛЛАР', 'ДОЛ']
+  },
+  EUR: { 
+    symbol: '€', 
+    name: 'Euro',
+    altFormats: ['EUR', 'EURO', 'ЕВРО', 'ЕУР', 'euros', 'euro']
+  },
+  GBP: { 
+    symbol: '£', 
+    name: 'British Pound',
+    altFormats: ['GBP', 'UKP', 'STG', 'ФУНТ', 'POUND']
+  },
+  AUD: { 
+    symbol: 'A$', 
+    name: 'Australian Dollar',
+    altFormats: ['AUD', 'AU$', 'АВСТР', 'AUS$']
+  },
+  INR: { 
+    symbol: '₹', 
+    name: 'Indian Rupee',
+    altFormats: ['INR', 'RS', 'रु', 'रू', 'РУПИЯ', 'RUPEE']
+  },
+  BRL: { 
+    symbol: 'R$', 
+    name: 'Brazilian Real',
+    altFormats: ['BRL', 'REAL', 'РЕАЛ']
+  },
+  CNY: { 
+    symbol: '¥', 
+    name: 'Chinese Yuan',
+    altFormats: ['CNY', 'RMB', 'YUAN', 'ЮАНЬ', '元']
+  },
+  JPY: { 
+    symbol: '¥', 
+    name: 'Japanese Yen',
+    altFormats: ['JPY', 'YEN', 'ЙЕНА', '円']
+  },
+  NGN: { 
+    symbol: '₦', 
+    name: 'Nigerian Naira',
+    altFormats: ['NGN', 'NAIRA', 'НАЙРА']
+  },
+  RUB: {
+    symbol: '₽',
+    name: 'Russian Ruble',
+    altFormats: ['RUB', 'РУБ', 'Р', 'р.', 'руб.', 'РУБЛЬ']
+  },
+  SAR: {
+    symbol: '﷼',
+    name: 'Saudi Riyal',
+    altFormats: ['SAR', 'SR', 'س.ر', 'ر.س.', 'ر.س', 'ريال']
+  }
 } as const;
 
 export type CurrencyCode = keyof typeof SUPPORTED_CURRENCIES;
@@ -18,41 +72,142 @@ export const WhatsAppMessageSchema = z.object({
   sender: z.string(),
   content: z.string(),
   amount: z.number(),
-  currency: z.enum(['ZAR', 'USD', 'EUR', 'GBP', 'AUD', 'INR']),
+  currency: z.enum([
+    'ZAR', 'USD', 'EUR', 'GBP', 'AUD', 'INR', 
+    'BRL', 'CNY', 'JPY', 'NGN', 'RUB', 'SAR'
+  ]),
 });
 
 export type WhatsAppMessage = z.infer<typeof WhatsAppMessageSchema>;
 
-// Create currency patterns for each supported currency
-function createCurrencyPattern(symbol: string): RegExp {
+// Create more flexible currency patterns with additional formats
+function createCurrencyPattern(symbol: string, altFormats: readonly string[]): RegExp[] {
   // Escape special characters in currency symbols
   const escapedSymbol = symbol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp(
-    // Match the currency symbol with optional spaces
+  
+  // Create patterns array
+  const patterns: RegExp[] = [
+    // Standard format: Currency symbol then amount with various separators
+    new RegExp(
+      // Match the currency symbol with optional spaces
+      escapedSymbol + '\\s*' +
+      // Match the amount with various decimal/thousand separators
+      '([0-9]{1,3}(?:[., \\s][0-9]{3})*(?:[.,][0-9]{1,2})?|[0-9]+(?:[.,][0-9]{1,2})?)',
+      'g'
+    ),
+    
+    // Format: Amount followed by currency symbol (e.g., "100$" or "150€")
+    new RegExp(
+      // Match amount with various separators
+      '([0-9]{1,3}(?:[., \\s][0-9]{3})*(?:[.,][0-9]{1,2})?|[0-9]+(?:[.,][0-9]{1,2})?)' +
+      // Match optional space and then the symbol
+      '\\s*' + escapedSymbol,
+      'g'
+    )
+  ];
+  
+  // Add patterns for alternative formats (e.g., "USD 100", "100 USD")
+  altFormats.forEach(altFormat => {
+    const escapedAlt = altFormat.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+    // Pattern: Alternative format then amount (e.g., "USD 100")
+    patterns.push(new RegExp(
+      escapedAlt + '\\s+' +
+      '([0-9]{1,3}(?:[., \\s][0-9]{3})*(?:[.,][0-9]{1,2})?|[0-9]+(?:[.,][0-9]{1,2})?)',
+      'g'
+    ));
+    
+    // Pattern: Amount then alternative format (e.g., "100 USD")
+    patterns.push(new RegExp(
+      '([0-9]{1,3}(?:[., \\s][0-9]{3})*(?:[.,][0-9]{1,2})?|[0-9]+(?:[.,][0-9]{1,2})?)' +
+      '\\s+' + escapedAlt,
+      'g'
+    ));
+  });
+
+  // Add pattern for Arabic/Persian numerals (٠١٢٣٤٥٦٧٨٩)
+  patterns.push(new RegExp(
     escapedSymbol + '\\s*' +
-    // Match the amount with optional decimal places and thousand separators
-    '([0-9]{1,3}(?:[., ][0-9]{3})*(?:[.,][0-9]{2})?|[0-9]+(?:[.,][0-9]{2})?)',
+    '([٠-٩]{1,3}(?:[., \\s][٠-٩]{3})*(?:[.,][٠-٩]{1,2})?|[٠-٩]+(?:[.,][٠-٩]{1,2})?)',
     'g'
-  );
+  ));
+  
+  patterns.push(new RegExp(
+    '([٠-٩]{1,3}(?:[., \\s][٠-٩]{3})*(?:[.,][٠-٩]{1,2})?|[٠-٩]+(?:[.,][٠-٩]{1,2})?)' +
+    '\\s*' + escapedSymbol,
+    'g'
+  ));
+
+  // Add patterns for Arabic/Persian numerals with alternative formats
+  altFormats.forEach(altFormat => {
+    const escapedAlt = altFormat.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+    patterns.push(new RegExp(
+      escapedAlt + '\\s+' +
+      '([٠-٩]{1,3}(?:[., \\s][٠-٩]{3})*(?:[.,][٠-٩]{1,2})?|[٠-٩]+(?:[.,][٠-٩]{1,2})?)',
+      'g'
+    ));
+    
+    patterns.push(new RegExp(
+      '([٠-٩]{1,3}(?:[., \\s][٠-٩]{3})*(?:[.,][٠-٩]{1,2})?|[٠-٩]+(?:[.,][٠-٩]{1,2})?)' +
+      '\\s+' + escapedAlt,
+      'g'
+    ));
+  });
+  
+  return patterns;
 }
 
 // Build patterns for all supported currencies
-const CURRENCY_PATTERNS = Object.entries(SUPPORTED_CURRENCIES).reduce<Record<CurrencyCode, RegExp>>((acc, [code, { symbol }]) => {
-  acc[code as CurrencyCode] = createCurrencyPattern(symbol);
+const CURRENCY_PATTERNS = Object.entries(SUPPORTED_CURRENCIES).reduce<Record<CurrencyCode, RegExp[]>>((acc, [code, { symbol, altFormats }]) => {
+  acc[code as CurrencyCode] = createCurrencyPattern(symbol, altFormats || []);
   return acc;
-}, {} as Record<CurrencyCode, RegExp>);
+}, {} as Record<CurrencyCode, RegExp[]>);
+
+// Define special payment method keywords that might indicate transactions
+const PAYMENT_METHOD_KEYWORDS = [
+  'sent', 'received', 'paid', 'payment', 'transfer', 'transaction',
+  'deposit', 'withdrawal', 'enviar', 'envié', 'recibido', 'pago',
+  'transferencia', 'bizum', 'paytm', 'venmo', 'cashapp', 'zelle',
+  'mpesa', 'paypal', 'revolut', 'alipay', 'wechat pay', 'bhej', 'bheja',
+  'حوالة', 'دفع', 'ارسال', 'استلام', 'پرداخت', 'انتقال'
+];
+
+// Convert Arabic/Persian numerals to Latin numerals
+function convertArabicToLatinNumerals(text: string): string {
+  const arabicNumerals: Record<string, string> = {
+    '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4',
+    '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9'
+  };
+  
+  return text.split('').map(char => arabicNumerals[char] || char).join('');
+}
 
 function extractAmount(text: string, pattern: RegExp): number | null {
   const match = pattern.exec(text);
   if (!match || !match[1]) return null;
 
+  // Get the matched amount text
+  let amountStr = match[1];
+  
+  // Convert Arabic numerals if present
+  if (/[٠-٩]/.test(amountStr)) {
+    amountStr = convertArabicToLatinNumerals(amountStr);
+  }
+
   // Clean the amount string
-  const amountStr = match[1]
+  amountStr = amountStr
     .replace(/\s/g, '') // Remove spaces
     .replace(/,/g, '.'); // Convert commas to decimal points
 
   const amount = parseFloat(amountStr);
   return isNaN(amount) ? null : amount;
+}
+
+// Check if a message contains payment method keywords
+function containsPaymentMethodKeyword(text: string): boolean {
+  const lowerText = text.toLowerCase();
+  return PAYMENT_METHOD_KEYWORDS.some(keyword => lowerText.includes(keyword.toLowerCase()));
 }
 
 export function parseChat(content: string): WhatsAppMessage[] {
@@ -76,12 +231,20 @@ export function parseChat(content: string): WhatsAppMessage[] {
         continue;
       }
 
-      // WhatsApp format variations
+      // WhatsApp format variations with more flexibility
       const formats = [
+        // Standard WhatsApp formats
         /^(\d{4}\/\d{2}\/\d{2}, \d{2}:\d{2}) - ([^:]+): (.+)$/,
         /^\[(\d{2}\/\d{2}\/\d{2} \d{2}:\d{2}:\d{2})\] ([^:]+): (.+)$/,
         /^\[(\d{2}\/\d{2}\/\d{4}, \d{2}:\d{2}:\d{2})\] ([^:]+): (.+)$/,
-        /^(\d{2}\/\d{2}\/\d{2}, \d{2}:\d{2}) - ([^:]+): (.+)$/
+        /^(\d{2}\/\d{2}\/\d{2}, \d{2}:\d{2}) - ([^:]+): (.+)$/,
+        // Additional European and other formats (day first)
+        /^(\d{2}\.\d{2}\.\d{4}, \d{2}:\d{2}) - ([^:]+): (.+)$/,
+        /^(\d{2}-\d{2}-\d{4}, \d{2}:\d{2}) - ([^:]+): (.+)$/,
+        // Allow for more flexibility in separators
+        /^(\d{2}[\/\.-]\d{2}[\/\.-]\d{2,4}[,\s]+\d{1,2}:\d{2}(?:\s*[AP]M)?)\s*[-\s]+([^:]+): (.+)$/,
+        // Format with AM/PM
+        /^(\d{2}[\/\.-]\d{2}[\/\.-]\d{2,4}, \d{1,2}:\d{2} [AP]M) - ([^:]+): (.+)$/,
       ];
 
       let match = null;
@@ -106,43 +269,122 @@ export function parseChat(content: string): WhatsAppMessage[] {
       let foundAmount: number | null = null;
       let foundCurrency: CurrencyCode | null = null;
 
-      // Try each currency pattern
-      for (const [currency, pattern] of Object.entries(CURRENCY_PATTERNS)) {
-        // Reset lastIndex to ensure we start from the beginning of the string
-        pattern.lastIndex = 0;
-        
-        const amount = extractAmount(messageContent, pattern);
-        if (amount !== null) {
-          foundAmount = amount;
-          foundCurrency = currency as CurrencyCode;
-          break;
+      // Try each currency pattern set
+      patternSearch: for (const [currency, patterns] of Object.entries(CURRENCY_PATTERNS)) {
+        for (const pattern of patterns) {
+          // Reset lastIndex to ensure we start from the beginning of the string
+          pattern.lastIndex = 0;
+          
+          const amount = extractAmount(messageContent, pattern);
+          if (amount !== null) {
+            foundAmount = amount;
+            foundCurrency = currency as CurrencyCode;
+            break patternSearch;
+          }
         }
       }
 
-      // If no amount or currency found, skip
+      // If no currency pattern matched, but message contains payment keywords and numbers, try to extract amount
+      if (foundAmount === null && containsPaymentMethodKeyword(messageContent)) {
+        // Look for numbers in the text with a simple pattern
+        const numberMatches = messageContent.match(/\b\d+(?:[.,]\d+)?\b/g) || 
+                             messageContent.match(/\b[٠-٩]+(?:[.,][٠-٩]+)?\b/g);
+        
+        if (numberMatches && numberMatches.length > 0) {
+          // Convert Arabic numerals if needed
+          let amountStr = numberMatches[0];
+          if (/[٠-٩]/.test(amountStr)) {
+            amountStr = convertArabicToLatinNumerals(amountStr);
+          }
+          
+          amountStr = amountStr.replace(/,/g, '.');
+          const amount = parseFloat(amountStr);
+          
+          if (!isNaN(amount)) {
+            foundAmount = amount;
+            
+            // Try to determine currency from context
+            const lowerContent = messageContent.toLowerCase();
+            
+            // Simple currency detection based on keywords
+            if (lowerContent.includes("euro") || lowerContent.includes("€")) {
+              foundCurrency = "EUR";
+            } else if (lowerContent.includes("dollar") || lowerContent.includes("$") || lowerContent.includes("usd")) {
+              foundCurrency = "USD";
+            } else if (lowerContent.includes("pound") || lowerContent.includes("£") || lowerContent.includes("gbp")) {
+              foundCurrency = "GBP";
+            } else if (lowerContent.includes("rupee") || lowerContent.includes("inr") || lowerContent.includes("rs") || lowerContent.includes("₹")) {
+              foundCurrency = "INR";
+            } else if (lowerContent.includes("ر.س") || lowerContent.includes("ريال") || lowerContent.includes("sar")) {
+              foundCurrency = "SAR";
+            } else if (lowerContent.includes("rand") || lowerContent.includes("zar") || messageContent.includes("R")) {
+              foundCurrency = "ZAR";
+            } else {
+              // Default to USD if currency can't be determined
+              foundCurrency = "USD";
+            }
+          }
+        }
+      }
+
+      // If no amount or currency found, check for payment service mentions with numbers
       if (foundAmount === null || foundCurrency === null) {
         console.log('No amount found in message:', messageContent);
         skippedLines++;
         continue;
       }
 
-      // Handle date formats
+      // Handle various date formats more flexibly
       let dateStr: string;
-      if (timestamp.match(/^\d{4}\/\d{2}\/\d{2}/)) {
-        const [date, time] = timestamp.split(',');
-        const [year, month, day] = date.split('/');
-        dateStr = `${year}-${month}-${day}T${time.trim()}:00`;
-      } else if (timestamp.includes(',')) {
-        const [date, time] = timestamp.split(',');
-        const [day, month, year] = date.split('/');
-        dateStr = `20${year}-${month}-${day}T${time.trim()}:00`;
-      } else {
-        const [day, month, year] = timestamp.split(' ')[0].split('/');
-        const time = timestamp.split(' ')[1];
-        dateStr = `20${year}-${month}-${day}T${time}`;
+      try {
+        if (timestamp.match(/^\d{4}\/\d{2}\/\d{2}/)) {
+          // YYYY/MM/DD format
+          const [date, time] = timestamp.split(',');
+          const [year, month, day] = date.split('/');
+          dateStr = `${year}-${month}-${day}T${time.trim().replace(/\s*[AP]M$/i, '')}:00`;
+        } else if (timestamp.includes('.') && timestamp.match(/\d{2}\.\d{2}\.\d{4}/)) {
+          // DD.MM.YYYY format (European)
+          const [date, time] = timestamp.split(',');
+          const [day, month, year] = date.split('.');
+          dateStr = `${year}-${month}-${day}T${time.trim().replace(/\s*[AP]M$/i, '')}:00`;
+        } else if (timestamp.includes('-') && timestamp.match(/\d{2}-\d{2}-\d{4}/)) {
+          // DD-MM-YYYY format
+          const [date, time] = timestamp.split(',');
+          const [day, month, year] = date.split('-');
+          dateStr = `${year}-${month}-${day}T${time.trim().replace(/\s*[AP]M$/i, '')}:00`;
+        } else if (timestamp.includes(',')) {
+          // DD/MM/YY format
+          const [date, timeWithPossibleAMPM] = timestamp.split(',');
+          const time = timeWithPossibleAMPM.trim().replace(/\s*[AP]M$/i, '');
+          const parts = date.trim().split(/[\/\.-]/);
+          
+          if (parts.length === 3) {
+            const [day, month, year] = parts;
+            // Ensure year has 4 digits
+            const fullYear = year.length === 2 ? `20${year}` : year;
+            dateStr = `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${time}:00`;
+          } else {
+            throw new Error(`Unrecognized date format: ${timestamp}`);
+          }
+        } else {
+          // Fallback format
+          const [datePart, timePart] = timestamp.split(' ');
+          const cleanTimePart = timePart.replace(/\s*[AP]M$/i, '');
+          const parts = datePart.split(/[\/\.-]/);
+          const [day, month, year] = parts;
+          
+          // Ensure year has 4 digits
+          const fullYear = year.length === 2 ? `20${year}` : year;
+          dateStr = `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${cleanTimePart}`;
+        }
+        
+        console.log('Created date string:', dateStr);
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error(`Error parsing date "${timestamp}": ${errorMessage}`);
+        // Use current date as fallback if date parsing fails
+        dateStr = new Date().toISOString();
       }
-      
-      console.log('Created date string:', dateStr);
       
       messages.push({
         timestamp: new Date(dateStr),

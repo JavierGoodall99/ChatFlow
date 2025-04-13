@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { WhatsAppMessage, SUPPORTED_CURRENCIES } from '@/lib/parseChat';
+import { WhatsAppMessage, SUPPORTED_CURRENCIES, CurrencyCode } from '@/lib/parseChat';
 import { Button } from '@/components/ui/button';
 
 interface MessageListProps {
@@ -15,7 +15,11 @@ export function MessageList({ messages }: MessageListProps) {
 
   const formatAmount = (amount: number, currency: keyof typeof SUPPORTED_CURRENCIES) => {
     const currencyInfo = SUPPORTED_CURRENCIES[currency];
-    return `${currencyInfo.symbol} ${amount.toFixed(2)}`;
+    // Use locale-aware formatting for amounts
+    return `${currencyInfo.symbol} ${amount.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`;
   };
 
   const formatDate = (date: Date) => {
@@ -28,6 +32,7 @@ export function MessageList({ messages }: MessageListProps) {
     } else if (date.toDateString() === yesterday.toDateString()) {
       return 'Yesterday';
     } else {
+      // Use locale-aware date formatting
       return date.toLocaleDateString(undefined, {
         year: 'numeric',
         month: 'short',
@@ -40,12 +45,20 @@ export function MessageList({ messages }: MessageListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
+  const [currencyFilter, setCurrencyFilter] = useState<CurrencyCode | null>(null);
 
   // Extract unique senders for filtering
   const uniqueSenders = useMemo(() => {
     const senders = new Set<string>();
     messages.forEach(msg => senders.add(msg.sender));
     return Array.from(senders);
+  }, [messages]);
+
+  // Extract unique currencies for filtering
+  const uniqueCurrencies = useMemo(() => {
+    const currencies = new Set<CurrencyCode>();
+    messages.forEach(msg => currencies.add(msg.currency));
+    return Array.from(currencies);
   }, [messages]);
 
   // Calculate financial totals
@@ -68,24 +81,55 @@ export function MessageList({ messages }: MessageListProps) {
 
   // Calculate min and max dates from messages
   const dateRange = useMemo(() => {
-    const dates = messages.map(msg => msg.timestamp);
+    // First make sure we have valid messages with valid dates
+    if (!messages.length) {
+      const today = new Date();
+      return {
+        minDate: today.toISOString().split('T')[0],
+        maxDate: today.toISOString().split('T')[0]
+      };
+    }
+    
+    // Filter out any invalid dates
+    const validDates = messages
+      .map(msg => msg.timestamp)
+      .filter(date => !isNaN(date.getTime()));
+    
+    // If no valid dates, return today's date
+    if (!validDates.length) {
+      const today = new Date();
+      return {
+        minDate: today.toISOString().split('T')[0],
+        maxDate: today.toISOString().split('T')[0]
+      };
+    }
+    
+    const timestamps = validDates.map(d => d.getTime());
+    const minTimestamp = Math.min(...timestamps);
+    const maxTimestamp = Math.max(...timestamps);
+    
     return {
-      minDate: new Date(Math.min(...dates.map(d => d.getTime()))).toISOString().split('T')[0],
-      maxDate: new Date(Math.max(...dates.map(d => d.getTime()))).toISOString().split('T')[0]
+      minDate: new Date(minTimestamp).toISOString().split('T')[0],
+      maxDate: new Date(maxTimestamp).toISOString().split('T')[0]
     };
   }, [messages]);
 
-  // Filter messages by sender, search term, and date range
+  // Filter messages by sender, search term, date range, and currency
   const filteredMessages = useMemo(() => {
     return messages
       .filter(msg => !currentFilter || msg.sender === currentFilter)
+      .filter(msg => !currencyFilter || msg.currency === currencyFilter)
       .filter(msg => {
         if (!searchTerm) return true;
         const searchLower = searchTerm.toLowerCase();
         return (
           msg.content.toLowerCase().includes(searchLower) ||
           msg.sender.toLowerCase().includes(searchLower) ||
-          formatAmount(msg.amount, msg.currency).toLowerCase().includes(searchLower)
+          formatAmount(msg.amount, msg.currency).toLowerCase().includes(searchLower) ||
+          // Also search by currency name
+          SUPPORTED_CURRENCIES[msg.currency].name.toLowerCase().includes(searchLower) ||
+          // Search by amount as number (without currency symbol)
+          msg.amount.toString().includes(searchTerm)
         );
       })
       .filter(msg => {
@@ -95,7 +139,7 @@ export function MessageList({ messages }: MessageListProps) {
         if (!startDate && endDate) return msgDate <= endDate;
         return msgDate >= startDate && msgDate <= endDate;
       });
-  }, [messages, currentFilter, searchTerm, startDate, endDate]);
+  }, [messages, currentFilter, searchTerm, startDate, endDate, currencyFilter]);
 
   if (messages.length === 0) {
     return null;
@@ -126,9 +170,47 @@ export function MessageList({ messages }: MessageListProps) {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by message, sender, or amount..."
+                placeholder="Search by message, sender, amount, or currency..."
                 className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
               />
+            </div>
+
+            {/* Currency Filter */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-medium text-gray-500">Filter by Currency</h3>
+                {currencyFilter && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs h-7 px-2 text-gray-500 hover:text-gray-700"
+                    onClick={() => setCurrencyFilter(null)}
+                  >
+                    Clear Currency Filter
+                  </Button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={currencyFilter === null ? "default" : "outline"}
+                  size="sm"
+                  className={`text-xs h-8 px-3 ${currencyFilter === null ? 'bg-primary/10 border-primary/20 text-primary' : ''}`}
+                  onClick={() => setCurrencyFilter(null)}
+                >
+                  All Currencies
+                </Button>
+                {uniqueCurrencies.map(currency => (
+                  <Button
+                    key={currency}
+                    variant={currencyFilter === currency ? "default" : "outline"}
+                    size="sm"
+                    className={`text-xs h-8 px-3 ${currencyFilter === currency ? 'bg-primary/10 border-primary/20 text-primary' : ''}`}
+                    onClick={() => setCurrencyFilter(currency)}
+                  >
+                    {SUPPORTED_CURRENCIES[currency].name} ({SUPPORTED_CURRENCIES[currency].symbol})
+                  </Button>
+                ))}
+              </div>
             </div>
 
             {/* Sender Filter */}
@@ -227,6 +309,7 @@ export function MessageList({ messages }: MessageListProps) {
                   <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Time</th>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Sender</th>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Currency</th>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Message</th>
                 </tr>
               </thead>
@@ -249,8 +332,21 @@ export function MessageList({ messages }: MessageListProps) {
                     </td>
                     <td className="px-4 py-3 text-sm font-medium whitespace-nowrap">
                       <span className="text-green-600 font-semibold">
-                        {formatAmount(message.amount, message.currency)}
+                        {message.amount.toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        })}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm font-medium whitespace-nowrap">
+                      <div className="flex items-center gap-1">
+                        <span className="inline-block bg-gray-100 px-2 py-0.5 rounded text-xs">
+                          {SUPPORTED_CURRENCIES[message.currency].symbol}
+                        </span>
+                        <span className="text-gray-600">
+                          {SUPPORTED_CURRENCIES[message.currency].name}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500">
                       <div className="max-w-[300px] line-clamp-2 hover:line-clamp-none">
@@ -266,14 +362,36 @@ export function MessageList({ messages }: MessageListProps) {
 
         {filteredMessages.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-500">No messages match the current filter.</p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => setCurrentFilter(null)}
-            >
-              Clear Filter
-            </Button>
+            <p className="text-gray-500">No messages match the current filters.</p>
+            <div className="flex justify-center gap-3 mt-4">
+              {currentFilter && (
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrentFilter(null)}
+                >
+                  Clear Sender Filter
+                </Button>
+              )}
+              {currencyFilter && (
+                <Button
+                  variant="outline"
+                  onClick={() => setCurrencyFilter(null)}
+                >
+                  Clear Currency Filter
+                </Button>
+              )}
+              {(startDate || endDate) && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setStartDate('');
+                    setEndDate('');
+                  }}
+                >
+                  Clear Date Filter
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -284,9 +402,17 @@ export function MessageList({ messages }: MessageListProps) {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {financialSummary.map(({ currency, symbol, total }) => (
             <div key={currency} className="bg-gray-50 p-4 rounded-lg">
-              <div className="text-xs text-gray-500 mb-1">{currency} Total</div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs text-gray-500">{SUPPORTED_CURRENCIES[currency as keyof typeof SUPPORTED_CURRENCIES].name}</span>
+                <span className="bg-gray-200 text-xs px-1.5 py-0.5 rounded">
+                  {symbol}
+                </span>
+              </div>
               <div className="text-2xl font-semibold text-green-600">
-                {symbol}{total.toFixed(2)}
+                {symbol}{total.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                })}
               </div>
             </div>
           ))}
