@@ -4,6 +4,13 @@ import { format } from 'date-fns';
 
 // Helper function to clean and encode text for PDF
 function sanitizeText(text: string): string {
+  // Special handling for currency symbols
+  text = text
+    .replace(/﷼/g, 'SR')      // Replace Saudi Riyal with SR
+    .replace(/₽/g, 'RUB')     // Replace Ruble symbol
+    .replace(/₹/g, 'Rs.')     // Replace Rupee symbol
+    .replace(/₦/g, 'NGN');    // Replace Naira symbol
+
   // First normalize text to decompose Unicode characters
   return text
     .normalize('NFKD')
@@ -110,6 +117,20 @@ function getLines(doc: jsPDF, text: string, maxWidth: number): string[] {
   return lines;
 }
 
+// Helper function to safely format a date with fallback
+function safeFormatDate(date: Date, formatPattern: string): string {
+  try {
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      return 'Invalid date';
+    }
+    return format(date, formatPattern);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Invalid date';
+  }
+}
+
 // Initialize PDF document with proper font settings
 function initializeDocument(): jsPDF {
   const doc = new jsPDF({
@@ -150,7 +171,7 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
   // Add export date
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
-  const exportDate = format(new Date(), "MMMM d, yyyy 'at' h:mm a");
+  const exportDate = safeFormatDate(new Date(), "MMMM d, yyyy 'at' h:mm a");
   doc.text(sanitizeText(`Generated on ${exportDate}`), doc.internal.pageSize.width - 15, 13, { align: 'right' });
   
   // Set up table settings
@@ -220,7 +241,7 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
   messages.forEach((msg, i) => {
     // Format row data with sanitized text
     const rowData = [
-      format(msg.timestamp, 'dd MMM yyyy'),
+      safeFormatDate(msg.timestamp, 'dd MMM yyyy'),
       sanitizeText(msg.sender),
       SUPPORTED_CURRENCIES[msg.currency].symbol,
       msg.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
@@ -390,7 +411,7 @@ export function exportToPDF(messages: WhatsAppMessage[]): void {
   }
   
   // Generate filename with date
-  const dateStr = format(new Date(), 'yyyy-MM-dd');
+  const dateStr = safeFormatDate(new Date(), 'yyyy-MM-dd');
   const filename = sanitizeText(`whatsapp-payments-${dateStr}.pdf`);
   
   // Save the PDF

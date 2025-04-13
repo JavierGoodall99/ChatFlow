@@ -58,7 +58,7 @@ export const SUPPORTED_CURRENCIES = {
     altFormats: ['RUB', 'РУБ', 'Р', 'р.', 'руб.', 'РУБЛЬ']
   },
   SAR: {
-    symbol: '﷼',
+    symbol: 'SR',  // Changed from ﷼ to SR (Latin characters) for better PDF compatibility
     name: 'Saudi Riyal',
     altFormats: ['SAR', 'SR', 'س.ر', 'ر.س.', 'ر.س', 'ريال']
   }
