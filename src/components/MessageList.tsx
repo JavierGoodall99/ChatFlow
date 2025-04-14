@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { WhatsAppMessage, SUPPORTED_CURRENCIES, CurrencyCode } from '@/lib/parseChat';
 import { Button } from '@/components/ui/button';
+import { InvoiceForm } from './InvoiceForm';
 
 interface MessageListProps {
   messages: WhatsAppMessage[];
@@ -46,6 +47,8 @@ export function MessageList({ messages }: MessageListProps) {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [currencyFilter, setCurrencyFilter] = useState<CurrencyCode | null>(null);
+  const [selectedMessages, setSelectedMessages] = useState<WhatsAppMessage[]>([]);
+  const [showInvoiceForm, setShowInvoiceForm] = useState(false);
 
   // Extract unique senders for filtering
   const uniqueSenders = useMemo(() => {
@@ -140,6 +143,54 @@ export function MessageList({ messages }: MessageListProps) {
         return msgDate >= startDate && msgDate <= endDate;
       });
   }, [messages, currentFilter, searchTerm, startDate, endDate, currencyFilter]);
+
+  // Handle message selection
+  const toggleMessageSelection = (message: WhatsAppMessage) => {
+    setSelectedMessages(prev => {
+      const isSelected = prev.some(msg => 
+        msg.timestamp.getTime() === message.timestamp.getTime() && 
+        msg.sender === message.sender && 
+        msg.amount === message.amount
+      );
+      
+      if (isSelected) {
+        return prev.filter(msg => 
+          !(msg.timestamp.getTime() === message.timestamp.getTime() && 
+            msg.sender === message.sender && 
+            msg.amount === message.amount)
+        );
+      } else {
+        return [...prev, message];
+      }
+    });
+  };
+
+  // Check if a message is selected
+  const isMessageSelected = (message: WhatsAppMessage) => {
+    return selectedMessages.some(msg => 
+      msg.timestamp.getTime() === message.timestamp.getTime() && 
+      msg.sender === message.sender && 
+      msg.amount === message.amount
+    );
+  };
+
+  // Calculate total selected amount by currency
+  const selectedTotals = useMemo(() => {
+    const totals: Record<string, number> = {};
+    
+    selectedMessages.forEach(msg => {
+      if (!totals[msg.currency]) {
+        totals[msg.currency] = 0;
+      }
+      totals[msg.currency] += msg.amount;
+    });
+    
+    return Object.entries(totals).map(([currency, total]) => ({
+      currency,
+      symbol: SUPPORTED_CURRENCIES[currency as keyof typeof SUPPORTED_CURRENCIES].symbol,
+      total
+    }));
+  }, [selectedMessages]);
 
   if (messages.length === 0) {
     return null;
@@ -298,6 +349,52 @@ export function MessageList({ messages }: MessageListProps) {
         </div>
       </div>
 
+      {/* Selected Messages Summary */}
+      {selectedMessages.length > 0 && (
+        <div className="mb-8 bg-primary/5 border border-primary/20 rounded-xl p-6 animate-fade-in">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-medium text-primary">Selected Messages ({selectedMessages.length})</h3>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setSelectedMessages([])}
+                className="text-xs h-8"
+              >
+                Clear Selection
+              </Button>
+              <Button 
+                size="sm"
+                onClick={() => setShowInvoiceForm(true)}
+                className="text-xs h-8 bg-primary hover:bg-primary/90"
+              >
+                Create Invoice
+              </Button>
+            </div>
+          </div>
+
+          {/* Selected totals */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {selectedTotals.map(({ currency, symbol, total }) => (
+              <div key={currency} className="bg-white p-4 rounded-lg border border-primary/10">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs text-gray-500">{SUPPORTED_CURRENCIES[currency as keyof typeof SUPPORTED_CURRENCIES].name}</span>
+                  <span className="bg-primary/10 text-primary text-xs px-1.5 py-0.5 rounded">
+                    {symbol}
+                  </span>
+                </div>
+                <div className="text-2xl font-semibold text-primary">
+                  {symbol}{total.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Messages Table */}
       <div className="border rounded-lg overflow-hidden shadow-sm bg-white mb-8">
         <div className="overflow-x-auto">
@@ -305,6 +402,9 @@ export function MessageList({ messages }: MessageListProps) {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
+                  <th scope="col" className="px-2 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-10">
+                    <span className="sr-only">Select</span>
+                  </th>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Time</th>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Sender</th>
@@ -315,7 +415,22 @@ export function MessageList({ messages }: MessageListProps) {
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
                 {filteredMessages.map((message, index) => (
-                  <tr key={index} className="hover:bg-gray-50 transition-colors">
+                  <tr 
+                    key={index} 
+                    className={`hover:bg-gray-50 transition-colors ${isMessageSelected(message) ? 'bg-primary/5' : ''}`}
+                    onClick={() => toggleMessageSelection(message)}
+                  >
+                    <td className="px-2 py-3 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={isMessageSelected(message)}
+                          onChange={() => toggleMessageSelection(message)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
+                        />
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">
                       {formatDate(message.timestamp)}
                     </td>
@@ -396,7 +511,7 @@ export function MessageList({ messages }: MessageListProps) {
         )}
       </div>
 
-      {/* Financial Summary Card - Moved to bottom */}
+      {/* Financial Summary Card */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <h3 className="text-sm font-medium text-gray-500 mb-4">Financial Summary</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -418,6 +533,14 @@ export function MessageList({ messages }: MessageListProps) {
           ))}
         </div>
       </div>
+
+      {/* Invoice Modal */}
+      {showInvoiceForm && (
+        <InvoiceForm 
+          selectedMessages={selectedMessages}
+          onClose={() => setShowInvoiceForm(false)}
+        />
+      )}
     </div>
   );
 }
