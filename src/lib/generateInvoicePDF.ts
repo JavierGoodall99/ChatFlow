@@ -143,32 +143,34 @@ export async function generateInvoicePDF(data: InvoiceData): Promise<void> {
     currentY += 15;
   }
   
-  // Company info section
-  doc.setFontSize(10);
-  doc.setTextColor(textColor[0], textColor[1], textColor[2]);
-  doc.setFont(template.fontFamily, 'normal');
+ // Company info section
+ doc.setFontSize(10);
+ doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+ doc.setFont(template.fontFamily, 'normal');
+ 
+ // Add dummy company details
+ doc.text('123 Business Street', margin, currentY);
+ currentY += 5;
+ doc.text('City, State 12345', margin, currentY);
+ currentY += 5;
+ doc.text('Phone: (123) 456-7890', margin, currentY);
+ currentY += 5;
+ doc.text('Email: contact@yourbusiness.com', margin, currentY);
+ 
+ doc.setFont(template.fontFamily, 'bold');
+ const startY = template.id === 'creative' ? 60 : currentY - 15; // Adjust based on template
+ 
+ const labelWidth = 60;
   
-  // Add dummy company details
-  doc.text('123 Business Street', margin, currentY);
-  currentY += 5;
-  doc.text('City, State 12345', margin, currentY);
-  currentY += 5;
-  doc.text('Phone: (123) 456-7890', margin, currentY);
-  currentY += 5;
-  doc.text('Email: contact@yourbusiness.com', margin, currentY);
+ doc.text('Invoice Number:', pageWidth - margin - labelWidth, startY);
+ doc.text('Date:', pageWidth - margin - labelWidth, startY + 8);
   
-  // Invoice details on the right
-  doc.setFont(template.fontFamily, 'bold');
-  const invoiceDetailsY = template.id === 'creative' ? 60 : 35;
-  doc.text('Invoice Number:', pageWidth - margin - 50, invoiceDetailsY);
-  doc.text('Date:', pageWidth - margin - 50, invoiceDetailsY + 8);
-  
-  doc.setFont(template.fontFamily, 'normal');
-  doc.text(sanitizeText(data.invoiceNumber), pageWidth - margin, invoiceDetailsY, { align: 'right' });
-  doc.text(formatDate(data.invoiceDate), pageWidth - margin, invoiceDetailsY + 8, { align: 'right' });
-  
-  // Line separator (some templates use different styles)
-  currentY += 15;
+ doc.setFont(template.fontFamily, 'normal');
+ // Add more space between label and value by moving the value position
+ doc.text(sanitizeText(data.invoiceNumber), pageWidth - margin, startY, { align: 'right' });
+ doc.text(formatDate(data.invoiceDate), pageWidth - margin, startY + 8, { align: 'right' });
+ // Line separator (some templates use different styles)
+ currentY += 15;
   
   if (template.id === 'creative') {
     // Creative template uses thicker, colored separator
