@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { UploadForm } from '@/components/UploadForm';
 import { MessageList } from '@/components/MessageList';
 import { ExportButtons } from '@/components/ExportButtons';
+import { CreateInvoiceButton } from '@/components/CreateInvoiceButton';
 import type { WhatsAppMessage } from '@/lib/parseChat';
 import { Button } from '@/components/ui/button';
 
@@ -42,9 +43,12 @@ export default function Home() {
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">
                 WhatsApp Receipt Cleaner
               </h1>
-              <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+              <p className="text-gray-600 max-w-2xl mx-auto text-lg mb-6">
                 Extract payment-related messages from your WhatsApp chats for easy record-keeping and accounting.
               </p>
+              <div className="flex justify-center space-x-4">
+                <CreateInvoiceButton />
+              </div>
             </div>
           </div>
         </header>
@@ -54,7 +58,7 @@ export default function Home() {
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-100 transition-all duration-300 flex flex-col">
               <div className="text-blue-600 bg-blue-100 p-3 rounded-full inline-block mb-4 self-start">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1-2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                 </svg>
               </div>
               <div className="relative mb-3">
