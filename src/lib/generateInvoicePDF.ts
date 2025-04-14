@@ -13,6 +13,21 @@ interface InvoiceData {
 }
 
 /**
+ * Sanitizes text to avoid encoding issues in PDF generation
+ * Removes or replaces problematic characters
+ */
+function sanitizeText(text: string): string {
+  if (!text) return '';
+  
+  // Replace known problematic character sequences
+  return text
+    .replace(/Ø=Þ/g, '') // Remove specific problematic sequence
+    .replace(/[^\x00-\x7F]/g, '') // Remove non-ASCII characters
+    .replace(/[\u0080-\uFFFF]/g, '') // Remove Unicode characters that might cause issues
+    .trim();
+}
+
+/**
  * Creates a professional invoice PDF from the selected WhatsApp messages
  */
 export async function generateInvoicePDF(data: InvoiceData): Promise<void> {
@@ -84,7 +99,7 @@ export async function generateInvoicePDF(data: InvoiceData): Promise<void> {
   // Company name at the top
   doc.setFontSize(22);
   doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-  doc.text(data.companyName, margin, currentY);
+  doc.text(sanitizeText(data.companyName), margin, currentY);
   
   // Invoice title on the right
   doc.setFontSize(28);
@@ -113,7 +128,7 @@ export async function generateInvoicePDF(data: InvoiceData): Promise<void> {
   doc.text('Date:', pageWidth - margin - 50, invoiceDetailsY + 8);
   
   doc.setFont('helvetica', 'normal');
-  doc.text(data.invoiceNumber, pageWidth - margin, invoiceDetailsY, { align: 'right' });
+  doc.text(sanitizeText(data.invoiceNumber), pageWidth - margin, invoiceDetailsY, { align: 'right' });
   doc.text(formatDate(data.invoiceDate), pageWidth - margin, invoiceDetailsY + 8, { align: 'right' });
   
   // Line separator
@@ -132,7 +147,7 @@ export async function generateInvoicePDF(data: InvoiceData): Promise<void> {
   currentY += 8;
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(11);
-  doc.text(data.clientName, margin, currentY);
+  doc.text(sanitizeText(data.clientName), margin, currentY);
   
   // --- Invoice Items Section --- //
   currentY += 20;
@@ -190,7 +205,8 @@ export async function generateInvoicePDF(data: InvoiceData): Promise<void> {
       alternateRow = !alternateRow;
       
       // Format message content or use a default description
-      const description = message.content.trim() || `Payment from ${message.sender}`;
+      const rawDescription = message.content.trim() || `Payment from ${message.sender}`;
+      const description = sanitizeText(rawDescription);
       
       // Ensure we don't exceed page height
       if (currentY > pageHeight - 40) {
@@ -294,7 +310,7 @@ export async function generateInvoicePDF(data: InvoiceData): Promise<void> {
     currentY += 7;
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    const noteLines = doc.splitTextToSize(data.notes, contentWidth);
+    const noteLines = doc.splitTextToSize(sanitizeText(data.notes), contentWidth);
     doc.text(noteLines, margin, currentY);
     
     currentY += noteLines.length * 5 + 5;
