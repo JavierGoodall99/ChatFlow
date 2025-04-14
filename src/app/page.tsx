@@ -40,10 +40,10 @@ export default function LandingPage() {
         <section className="py-20 md:py-28 bg-gradient-to-b from-muted/50 to-background">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center text-center space-y-4 md:space-y-6">
-              <h1 className="text-3xl md:text-5xl font-bold tracking-tighter max-w-3xl">
+              <h1 className="text-3xl md:text-5xl font-bold tracking-tighter max-w-3xl text-shimmer">
                 Find Payment Messages in WhatsApp Chats Instantly
               </h1>
-              <p className="text-muted-foreground text-lg md:text-xl max-w-[42rem]">
+              <p className="text-muted-foreground text-lg md:text-xl max-w-[42rem] text-shimmer">
                 A simple tool for freelancers, small business owners, and side hustlers to extract 
                 payment-related messages and turn them into clean, exportable records.
               </p>
