@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { SUPPORTED_CURRENCIES, CurrencyCode } from '@/lib/parseChat';
 import { Button } from '@/components/ui/button';
+import { INVOICE_TEMPLATES, InvoiceTemplateID } from '@/lib/invoiceTemplates';
 
 // Define a manual invoice line item
 interface InvoiceLineItem {
@@ -35,6 +36,7 @@ export function ManualInvoiceForm({ onClose }: ManualInvoiceFormProps) {
   const [companyName, setCompanyName] = useState('');
   const [notes, setNotes] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>('USD');
+  const [selectedTemplate, setSelectedTemplate] = useState<InvoiceTemplateID>('modern');
   const [lineItems, setLineItems] = useState<InvoiceLineItem[]>([
     { 
       id: crypto.randomUUID(),
@@ -104,6 +106,12 @@ export function ManualInvoiceForm({ onClose }: ManualInvoiceFormProps) {
     })}`;
   };
 
+  // Get template accent color as a CSS color string
+  const getTemplateAccentColor = (templateId: InvoiceTemplateID): string => {
+    const template = INVOICE_TEMPLATES[templateId];
+    return `rgb(${template.primaryColor[0]}, ${template.primaryColor[1]}, ${template.primaryColor[2]})`;
+  };
+
   // Convert invoice data to a format compatible with existing PDF generator
   const prepareInvoiceData = () => {
     // Convert line items to "WhatsApp-like" messages format for compatibility
@@ -122,6 +130,7 @@ export function ManualInvoiceForm({ onClose }: ManualInvoiceFormProps) {
       companyName: companyName || 'Your Business Name',
       messages,
       notes,
+      templateId: selectedTemplate, // Include the selected template
     };
   };
 
@@ -174,6 +183,35 @@ export function ManualInvoiceForm({ onClose }: ManualInvoiceFormProps) {
         
         <form onSubmit={handleSubmit} className="p-6">
           <div className="space-y-6">
+            {/* Template selection section */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Invoice Template
+              </label>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                {Object.values(INVOICE_TEMPLATES).map((template) => (
+                  <div 
+                    key={template.id}
+                    onClick={() => setSelectedTemplate(template.id)}
+                    className={`cursor-pointer border rounded-md overflow-hidden transition-all hover:shadow-md ${
+                      selectedTemplate === template.id 
+                        ? 'ring-2 ring-offset-2 ring-primary' 
+                        : 'opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <div 
+                      className="h-12 w-full" 
+                      style={{ backgroundColor: getTemplateAccentColor(template.id) }} 
+                    />
+                    <div className="p-2 bg-white">
+                      <p className="text-xs font-medium">{template.name}</p>
+                      <p className="text-[10px] text-gray-500 truncate">{template.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            
             {/* Invoice details section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
