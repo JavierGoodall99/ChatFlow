@@ -12,16 +12,13 @@ import { Button } from '@/components/ui/button';
 
 export default function Home() {
   const [messages, setMessages] = useState<WhatsAppMessage[]>([]);
-  const [showIntro, setShowIntro] = useState(true);
 
   const handleMessagesFound = (foundMessages: WhatsAppMessage[]) => {
     setMessages(foundMessages);
-    setShowIntro(false);
   };
 
   const handleStartOver = () => {
     setMessages([]);
-    setShowIntro(true);
   };
 
   return (
@@ -53,59 +50,7 @@ export default function Home() {
           </div>
         </header>
 
-        {showIntro && messages.length === 0 && (
-          <div className="mb-12 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-blue-100 transition-all duration-300 flex flex-col">
-              <div className="text-blue-600 bg-blue-100 p-3 rounded-full inline-block mb-4 self-start">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                </svg>
-              </div>
-              <div className="relative mb-3">
-                <span className="absolute top-0 -left-2 text-5xl font-bold text-blue-100 -z-10">1</span>
-                <h2 className="text-xl font-semibold">Upload Chat</h2>
-              </div>
-              <p className="text-gray-600">
-                Export your WhatsApp chat as a .txt file and upload it here securely. All processing happens in your browser.
-              </p>
-            </div>
-            
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-purple-100 transition-all duration-300 flex flex-col">
-              <div className="text-purple-600 bg-purple-100 p-3 rounded-full inline-block mb-4 self-start">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="4" y1="21" x2="4" y2="14"></line>
-                  <line x1="12" y1="21" x2="12" y2="12"></line>
-                  <line x1="20" y1="21" x2="20" y2="16"></line>
-                  <line x1="4" y1="14" x2="20" y2="16"></line>
-                </svg>
-              </div>
-              <div className="relative mb-3">
-                <span className="absolute top-0 -left-2 text-5xl font-bold text-purple-100 -z-10">2</span>
-                <h2 className="text-xl font-semibold">Review Results</h2>
-              </div>
-              <p className="text-gray-600">
-                See a clean list of all payment-related messages, sorted by date, with amounts clearly labeled.
-              </p>
-            </div>
-            
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-green-100 transition-all duration-300 flex flex-col">
-              <div className="text-green-600 bg-green-100 p-3 rounded-full inline-block mb-4 self-start">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="17 8 12 3 7 8"></polyline>
-                  <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-              </div>
-              <div className="relative mb-3">
-                <span className="absolute top-0 -left-2 text-5xl font-bold text-green-100 -z-10">3</span>
-                <h2 className="text-xl font-semibold">Export Data</h2>
-              </div>
-              <p className="text-gray-600">
-                Download as a professional PDF document with full transaction summary for your records.
-              </p>
-            </div>
-          </div>
-        )}
+      
 
         <div className={messages.length > 0 ? "opacity-75 scale-95 transform transition-all" : ""}>
           <UploadForm onMessagesFound={handleMessagesFound} />
