@@ -1,29 +1,32 @@
-'use client'
+'use client';
 
-import { useEffect } from 'react'
-import { Button } from '@/components/ui/button'
+import { useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 
 export default function Error({
   error,
   reset,
 }: {
-  error: Error & { digest?: string }
-  reset: () => void
+  error: Error & { digest?: string };
+  reset: () => void;
 }) {
   useEffect(() => {
-    // Log any errors to an error reporting service in production
-    console.error(error)
-  }, [error])
+    // Optionally log to an error reporting service
+    console.error(error);
+  }, [error]);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4">
-      <h2 className="text-xl font-semibold">Something went wrong!</h2>
+    <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 text-center">
+      <h2 className="text-2xl font-bold">Something went wrong!</h2>
+      <p className="text-muted-foreground">
+        We apologize for the inconvenience. Please try again.
+      </p>
       <Button
-        onClick={reset}
         variant="outline"
+        onClick={reset}
       >
         Try again
       </Button>
     </div>
-  )
+  );
 }
