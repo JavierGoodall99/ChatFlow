@@ -20,13 +20,13 @@ export function Header() {
             <Link href="/" className="flex items-center gap-2">
               <Image
                 src="/icon.png"
-                alt="WhatsApp Receipt Cleaner"
+                alt="ChatFlow"
                 width={32}
                 height={32}
                 className="relative"
                 priority
               />
-              <span className="text-xl font-semibold">WhatsApp Receipt Cleaner</span>
+              <span className="text-xl font-semibold">ChatFlow</span>
             </Link>
           </div>
           <nav className="hidden md:flex items-center space-x-1">

@@ -1,12 +1,9 @@
-import Image from 'next/image';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 
 export const metadata = {
-  title: 'Help & FAQ - WhatsApp Receipt Cleaner',
-  description: 'Frequently asked questions and help documentation for WhatsApp Receipt Cleaner',
+  title: 'Help & FAQ - ChatFlow',
+  description: 'Learn how to use ChatFlow to organize your WhatsApp business communications and extract payment information',
 };
 
 export default function HelpPage() {
@@ -15,156 +12,105 @@ export default function HelpPage() {
       <Header />
       
       <main className="flex-1 p-4 md:p-8">
-        <div className="max-w-4xl mx-auto">
-          <header className="mb-12">
-            <div className="flex flex-col items-center space-y-4">
-              <Link href="/" className="hover:opacity-80 transition-opacity">
-                <div className="relative">
-                  <Image
-                    src="/icon.png"
-                    alt="WhatsApp Receipt Cleaner Icon"
-                    width={70}
-                    height={70}
-                    className="relative drop-shadow-md"
-                    priority
-                  />
+        <div className="container mx-auto px-4 md:px-6 w-full max-w-5xl py-10">
+          <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center">Help & Frequently Asked Questions</h1>
+          
+          <div className="space-y-12">
+            <section className="space-y-6">
+              <h2 className="text-2xl font-semibold">How to Use ChatFlow</h2>
+              
+              <div className="space-y-6">
+                <div className="rounded-lg border p-6 bg-card text-card-foreground">
+                  <h3 className="text-xl font-medium mb-4">1. Export Your WhatsApp Chat</h3>
+                  <p className="text-muted-foreground mb-4">
+                    First, you need to export your WhatsApp chat as a .txt file:
+                  </p>
+                  <ol className="space-y-2 list-decimal pl-5">
+                    <li>Open the WhatsApp chat with your client</li>
+                    <li>Tap the three dots (•••) in the top right</li>
+                    <li>Select &quot;More&quot; then &quot;Export chat&quot;</li>
+                    <li>Choose &quot;Without media&quot; (unless you need images)</li>
+                    <li>Save or share the .txt file to your computer</li>
+                  </ol>
                 </div>
-              </Link>
-              <div className="text-center">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">
-                  Help & Frequently Asked Questions
-                </h1>
-                <p className="text-gray-600 max-w-2xl mx-auto text-lg">
-                  Get answers to common questions about the WhatsApp Receipt Cleaner tool.
-                </p>
+                
+                <div className="rounded-lg border p-6 bg-card text-card-foreground">
+                  <h3 className="text-xl font-medium mb-4">2. Upload to ChatFlow</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Once you have your .txt file:
+                  </p>
+                  <ol className="space-y-2 list-decimal pl-5">
+                    <li>Go to the ChatFlow app</li>
+                    <li>Drag and drop your .txt file, or click to browse and select it</li>
+                    <li>ChatFlow automatically filters payment-related messages</li>
+                  </ol>
+                </div>
+                
+                <div className="rounded-lg border p-6 bg-card text-card-foreground">
+                  <h3 className="text-xl font-medium mb-4">3. Work with Your Payment Data</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Now you can:
+                  </p>
+                  <ul className="space-y-2 list-disc pl-5">
+                    <li>View all payment-related messages</li>
+                    <li>Generate a professional invoice with one click</li>
+                    <li>Export to PDF for your records</li>
+                    <li>Export to CSV for spreadsheet analysis</li>
+                    <li>Create a custom invoice manually</li>
+                  </ul>
+                </div>
               </div>
-            </div>
-          </header>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8">
-            <div className="p-6 border-b border-gray-100">
-              <h2 className="text-xl font-semibold">Frequently Asked Questions</h2>
-            </div>
-            <div className="p-6 space-y-6">
-              {/* FAQ Items */}
-              <div className="space-y-1">
-                <h3 className="font-semibold text-lg text-gray-900">How do I export my WhatsApp chat?</h3>
-                <p className="text-gray-600">
-                  On your mobile device, open the WhatsApp chat you want to export, tap the three dots menu (⋮), select 
-                  &ldquo;More&rdquo; → &ldquo;Export chat&rdquo; → &ldquo;Without media&rdquo;. Then send the chat file to yourself by email or other means, 
-                  and download it to your device.
-                </p>
+            </section>
+            
+            <section className="space-y-6">
+              <h2 className="text-2xl font-semibold">Frequently Asked Questions</h2>
+              
+              <div className="space-y-6">
+                <div className="rounded-lg border p-6 bg-card text-card-foreground">
+                  <h3 className="text-xl font-medium mb-2">Is my data secure?</h3>
+                  <p className="text-muted-foreground">
+                    Absolutely. ChatFlow processes everything locally in your browser. Your WhatsApp chats and payment 
+                    information never leave your device. There&apos;s no server storage, no data transfer, and no tracking.
+                  </p>
+                </div>
+                
+                <div className="rounded-lg border p-6 bg-card text-card-foreground">
+                  <h3 className="text-xl font-medium mb-2">What currencies are supported?</h3>
+                  <p className="text-muted-foreground">
+                    ChatFlow currently detects currency symbols for major currencies including R (South African Rand), $, €, £, and ₹. 
+                    We&apos;re constantly improving our detection to support more formats.
+                  </p>
+                </div>
+                
+                <div className="rounded-lg border p-6 bg-card text-card-foreground">
+                  <h3 className="text-xl font-medium mb-2">Can I customize my invoices?</h3>
+                  <p className="text-muted-foreground">
+                    Yes! You can create invoices manually with our invoice generator. Add your business details, 
+                    customize line items, and generate professional PDF invoices.
+                  </p>
+                </div>
+                
+                <div className="rounded-lg border p-6 bg-card text-card-foreground">
+                  <h3 className="text-xl font-medium mb-2">Does ChatFlow work offline?</h3>
+                  <p className="text-muted-foreground">
+                    Yes, once the page is loaded, ChatFlow functions completely offline. You can process your 
+                    WhatsApp chats, generate invoices, and export data without an internet connection.
+                  </p>
+                </div>
+                
+                <div className="rounded-lg border p-6 bg-card text-card-foreground">
+                  <h3 className="text-xl font-medium mb-2">I have more questions!</h3>
+                  <p className="text-muted-foreground">
+                    We&apos;re constantly improving ChatFlow based on user feedback. If you have questions or suggestions, 
+                    please visit our <a href="https://github.com/JavierGoodall99/whatsappp-reciept-cleaner" className="text-primary hover:underline">GitHub page</a>.
+                  </p>
+                </div>
               </div>
-
-              <div className="space-y-1">
-                <h3 className="font-semibold text-lg text-gray-900">Is my data secure and private?</h3>
-                <p className="text-gray-600">
-                  Yes. All processing happens entirely in your browser. Your chat data never leaves your device or gets sent 
-                  to any server. This tool works offline once loaded, and we don&apos;t store any of your information.
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <h3 className="font-semibold text-lg text-gray-900">Which currencies are supported?</h3>
-                <p className="text-gray-600">
-                  The tool currently supports major currencies including: South African Rand (R), US Dollar ($), Euro (€), 
-                  British Pound (£), Australian Dollar (A$), Indian Rupee (₹), Brazilian Real (R$), Chinese Yuan (¥), 
-                  Japanese Yen (¥), Nigerian Naira (₦), Russian Ruble (₽), and Saudi Riyal (﷼).
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <h3 className="font-semibold text-lg text-gray-900">Why aren&apos;t all my messages showing up?</h3>
-                <p className="text-gray-600">
-                  The tool specifically filters for messages containing currency amounts. If a message doesn&apos;t include 
-                  a recognizable monetary value (like &ldquo;R250&rdquo; or &ldquo;$100&rdquo;), it won&apos;t be included in the results. This helps 
-                  focus on payment-related information only.
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <h3 className="font-semibold text-lg text-gray-900">How do I use the PDF export feature?</h3>
-                <p className="text-gray-600">
-                  After uploading your chat file and seeing the filtered payment messages, scroll down to the &ldquo;Export&rdquo; 
-                  section and click &ldquo;Export as PDF&rdquo;. The tool will generate a professional PDF document with all your 
-                  payment information and a financial summary, which will download to your device.
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <h3 className="font-semibold text-lg text-gray-900">Can I use this for business accounting?</h3>
-                <p className="text-gray-600">
-                  This tool is designed to help freelancers and small businesses extract and organize payment records from 
-                  WhatsApp conversations. While it provides a convenient way to gather this information, we recommend 
-                  consulting with an accountant for official financial record-keeping requirements in your region.
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <h3 className="font-semibold text-lg text-gray-900">Are there any file size limitations?</h3>
-                <p className="text-gray-600">
-                  Since all processing happens in your browser, very large chat files (over 10MB) might slow down your 
-                  device. For best performance, consider exporting specific date ranges from your chats rather than 
-                  years of conversation history at once.
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <h3 className="font-semibold text-lg text-gray-900">What information is included in the PDF export?</h3>
-                <p className="text-gray-600">
-                  The PDF includes a table with the date, sender, currency, amount, and message content for each payment 
-                  message. It also includes a financial summary showing totals by currency and by sender, making it easy 
-                  to track income from different sources.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-12">
-            <div className="p-6 border-b border-gray-100">
-              <h2 className="text-xl font-semibold">Troubleshooting</h2>
-            </div>
-            <div className="p-6 space-y-6">
-              <div className="space-y-1">
-                <h3 className="font-semibold text-lg text-gray-900">My chat file won&apos;t upload</h3>
-                <p className="text-gray-600">
-                  Make sure you&apos;re uploading a .txt file directly exported from WhatsApp. Screenshots or other file formats 
-                  aren&apos;t supported. If your file is very large, try clearing your browser cache or using a different browser.
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <h3 className="font-semibold text-lg text-gray-900">Currency amounts aren&apos;t being detected</h3>
-                <p className="text-gray-600">
-                  The tool looks for common currency formats (like &ldquo;R100&rdquo;, &ldquo;$50.25&rdquo;, &ldquo;€10,50&rdquo;). If your amounts use 
-                  different formats or unusual spacing, they might not be detected. Try searching for those messages 
-                  manually in your exported chat file.
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <h3 className="font-semibold text-lg text-gray-900">The PDF export isn&apos;t working</h3>
-                <p className="text-gray-600">
-                  Some browsers have stricter privacy settings that can interfere with downloads. Try allowing popups for 
-                  this site or using a different browser. Make sure you have sufficient storage space on your device.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-center mb-16">
-            <Link href="/">
-              <Button className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-                Back to Home
-              </Button>
-            </Link>
+            </section>
           </div>
         </div>
       </main>
-
+      
       <Footer />
     </div>
   );
