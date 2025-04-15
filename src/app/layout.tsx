@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import { Analytics } from "@vercel/analytics/react"
 import { Inter } from 'next/font/google'
 import { ClerkProvider } from '@clerk/nextjs'
 import './globals.css'
@@ -31,6 +32,7 @@ export default function RootLayout({
         <ClerkProvider>
           <main className="min-h-screen bg-background">
             {children}
+            <Analytics />
           </main>
         </ClerkProvider>
       </body>
