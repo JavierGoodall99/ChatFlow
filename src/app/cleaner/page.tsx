@@ -11,7 +11,7 @@ import { Footer } from '@/components/Footer';
 import type { WhatsAppMessage } from '@/lib/parseChat';
 import { Button } from '@/components/ui/button';
 
-export default function Home() {
+export default function CleanerPage() {
   const [messages, setMessages] = useState<WhatsAppMessage[]>([]);
 
   const handleMessagesFound = (foundMessages: WhatsAppMessage[]) => {
@@ -33,18 +33,21 @@ export default function Home() {
               <div className="relative">
                 <Image
                   src="/icon.png"
-                  alt="WhatsApp Receipt Cleaner Icon"
+                  alt="ChatFlow Icon"
                   width={90}
                   height={90}
                   className="relative drop-shadow-md"
                   priority
                 />
               </div>
+              <h1 className="text-2xl font-bold mt-4 text-center sm:text-3xl">
+                WhatsApp Business Assistant
+              </h1>
               <div className="text-center">
-                <p className="text-gray-600 max-w-2xl mx-auto text-lg mb-6">
-                  Extract payment-related messages from your WhatsApp chats for easy record-keeping and accounting.
+                <p className="text-muted-foreground max-w-2xl mx-auto text-lg mb-6">
+                  Extract payment messages, generate invoices, and organize your WhatsApp business communications
                 </p>
-                <div className="flex justify-center space-x-4">
+                <div className="flex flex-wrap justify-center gap-4">
                   <CreateInvoiceButton />
                 </div>
               </div>
