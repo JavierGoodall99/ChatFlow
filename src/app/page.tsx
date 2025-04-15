@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
 
 export const metadata = {
   title: 'WhatsApp Receipt Cleaner - Extract Payment Messages Easily',
@@ -203,23 +204,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer className="border-t py-6 md:py-0">
-        <div className="container mx-auto px-4 md:px-6 w-full max-w-7xl">
-          <div className="flex flex-col md:flex-row justify-between items-center md:h-16 gap-4 md:gap-0">
-            <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} WhatsApp Receipt Cleaner. All rights reserved.
-            </p>
-            <div className="flex items-center gap-4">
-              <Link href="/help" className="text-sm text-muted-foreground hover:underline">
-                Help & FAQ
-              </Link>
-              <Link href="/cleaner" className="text-sm text-muted-foreground hover:underline">
-                Try the Tool
-              </Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

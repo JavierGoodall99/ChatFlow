@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
 
 export const metadata = {
   title: 'Help & FAQ - WhatsApp Receipt Cleaner',
@@ -161,12 +162,10 @@ export default function HelpPage() {
               </Button>
             </Link>
           </div>
-
-          <footer className="text-center text-sm text-gray-400 mb-8">
-            <p>© {new Date().getFullYear()} WhatsApp Receipt Cleaner | All processing happens in your browser</p>
-          </footer>
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 }
