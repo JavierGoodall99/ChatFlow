@@ -53,7 +53,6 @@ export default function Home() {
           <div className={messages.length > 0 ? "opacity-75 scale-95 transform transition-all" : ""}>
             <UploadForm onMessagesFound={handleMessagesFound} />
           </div>
-          
           {messages.length > 0 && (
             <div className="mt-12 space-y-10 animate-fade-in">
               <MessageList messages={messages} />
