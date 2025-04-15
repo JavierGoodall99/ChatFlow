@@ -41,9 +41,6 @@ export default function Home() {
                 />
               </div>
               <div className="text-center">
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">
-                  WhatsApp Receipt Cleaner
-                </h1>
                 <p className="text-gray-600 max-w-2xl mx-auto text-lg mb-6">
                   Extract payment-related messages from your WhatsApp chats for easy record-keeping and accounting.
                 </p>
@@ -53,9 +50,6 @@ export default function Home() {
               </div>
             </div>
           </header>
-
-        
-
           <div className={messages.length > 0 ? "opacity-75 scale-95 transform transition-all" : ""}>
             <UploadForm onMessagesFound={handleMessagesFound} />
           </div>
