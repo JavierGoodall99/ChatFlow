@@ -83,7 +83,7 @@ All processing happens entirely in your browser - your chat data never leaves yo
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/whatsapp-receipt-cleaner.git
+git clone https://github.com/JavierGoodall99/whatsappp-reciept-cleaner.git
 ```
 
 2. Install dependencies:
