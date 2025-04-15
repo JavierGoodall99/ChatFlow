@@ -10,9 +10,11 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import type { WhatsAppMessage } from '@/lib/parseChat';
 import { Button } from '@/components/ui/button';
+import { useUser } from '@clerk/nextjs';
 
 export default function CleanerPage() {
   const [messages, setMessages] = useState<WhatsAppMessage[]>([]);
+  const { user, isLoaded } = useUser();
 
   const handleMessagesFound = (foundMessages: WhatsAppMessage[]) => {
     setMessages(foundMessages);
@@ -43,6 +45,13 @@ export default function CleanerPage() {
               <h1 className="text-2xl font-bold mt-4 text-center sm:text-3xl">
                 WhatsApp Business Assistant
               </h1>
+              {isLoaded && user && (
+                <div className="text-center">
+                  <p className="text-primary font-medium">
+                    Welcome back, {user.firstName || user.username || 'User'}!
+                  </p>
+                </div>
+              )}
               <div className="text-center">
                 <p className="text-muted-foreground max-w-2xl mx-auto text-lg mb-6">
                   Extract payment messages, generate invoices, and organize your WhatsApp business communications

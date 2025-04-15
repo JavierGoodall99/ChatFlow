@@ -1,6 +1,11 @@
+'use client';
+
 import React from 'react';
+import { SignInButton, SignUpButton, SignedIn, SignedOut } from '@clerk/nextjs';
+import Link from 'next/link';
 
 export function Footer() {
+  
   return (
     <footer className="border-t py-8 md:py-10">
       <div className="container mx-auto px-4 md:px-6 w-full max-w-7xl">
@@ -16,15 +21,33 @@ export function Footer() {
             <div className="flex flex-col space-y-4">
               <h3 className="font-semibold">Links</h3>
               <ul className="space-y-2">
+                <SignedIn>
+                  <li>
+                    <Link href="/cleaner" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                      Dashboard
+                    </Link>
+                  </li>
+                </SignedIn>
+                <SignedOut>
+                  <li>
+                    <SignUpButton mode="modal">
+                      <button className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                        Get Started
+                      </button>
+                    </SignUpButton>
+                  </li>
+                  <li>
+                    <SignInButton mode="modal">
+                      <button className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                        Sign In
+                      </button>
+                    </SignInButton>
+                  </li>
+                </SignedOut>
                 <li>
-                  <a href="/cleaner" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                    Try It Now
-                  </a>
-                </li>
-                <li>
-                  <a href="/help" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  <Link href="/help" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                     Help & FAQ
-                  </a>
+                  </Link>
                 </li>
                 <li>
                   <a href="https://github.com/JavierGoodall99/whatsappp-reciept-cleaner" target="_blank" className="text-sm text-muted-foreground hover:text-primary transition-colors">
@@ -38,6 +61,9 @@ export function Footer() {
               <h3 className="font-semibold">Privacy</h3>
               <p className="text-sm text-muted-foreground">
                 100% client-side processing. Your data never leaves your device.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Authentication is handled securely by Clerk.
               </p>
             </div>
           </div>

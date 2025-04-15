@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import { SignInButton, SignUpButton, UserButton, SignedIn, SignedOut } from '@clerk/nextjs';
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -30,21 +31,34 @@ export function Header() {
             </Link>
           </div>
           <nav className="hidden md:flex items-center space-x-1">
-            <Link href="/cleaner" passHref>
-              <Button variant="ghost" size="sm" className="text-sm font-medium">Try It Now</Button>
-            </Link>
             <Link href="/help" passHref>
               <Button variant="ghost" size="sm" className="text-sm font-medium">Help & FAQ</Button>
             </Link>
             <Link href="https://github.com/JavierGoodall99/whatsappp-reciept-cleaner" target="_blank" passHref>
               <Button variant="ghost" size="sm" className="text-sm font-medium">GitHub</Button>
             </Link>
-            <Link href="/cleaner" passHref>
-              <Button size="sm" className="ml-2 text-sm font-medium">Get Started</Button>
-            </Link>
+            
+            <SignedIn>
+              <Link href="/cleaner" passHref>
+                <Button variant="ghost" size="sm" className="text-sm font-medium">My Dashboard</Button>
+              </Link>
+              <UserButton afterSignOutUrl="/" />
+            </SignedIn>
+            
+            <SignedOut>
+              <SignInButton mode="modal">
+                <Button variant="ghost" size="sm" className="text-sm font-medium">Sign In</Button>
+              </SignInButton>
+              <SignUpButton mode="modal">
+                <Button size="sm" className="ml-2 text-sm font-medium">Get Started</Button>
+              </SignUpButton>
+            </SignedOut>
           </nav>
           <div className="flex md:hidden">
-            <Button variant="ghost" size="sm" onClick={toggleMobileMenu} aria-label="Toggle menu">
+            <SignedIn>
+              <UserButton afterSignOutUrl="/" />
+            </SignedIn>
+            <Button variant="ghost" size="sm" onClick={toggleMobileMenu} aria-label="Toggle menu" className="ml-2">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="3" y1="12" x2="21" y2="12"></line>
                 <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -66,18 +80,27 @@ export function Header() {
           {/* Menu */}
           <div className="absolute top-full left-0 right-0 md:hidden animate-fade-in bg-background border-t border-gray-100 shadow-lg z-50">
             <div className="container mx-auto px-4 py-3 space-y-1">
-              <Link href="/cleaner" passHref className="block">
-                <Button variant="ghost" size="sm" className="w-full justify-start text-sm font-medium">Try It Now</Button>
-              </Link>
               <Link href="/help" passHref className="block">
                 <Button variant="ghost" size="sm" className="w-full justify-start text-sm font-medium">Help & FAQ</Button>
               </Link>
               <Link href="https://github.com/JavierGoodall99/whatsappp-reciept-cleaner" target="_blank" passHref className="block">
                 <Button variant="ghost" size="sm" className="w-full justify-start text-sm font-medium">GitHub</Button>
               </Link>
-              <Link href="/cleaner" passHref className="block">
-                <Button size="sm" className="w-full justify-start text-sm font-medium mt-2">Get Started</Button>
-              </Link>
+              
+              <SignedIn>
+                <Link href="/cleaner" passHref className="block">
+                  <Button variant="ghost" size="sm" className="w-full justify-start text-sm font-medium">My Dashboard</Button>
+                </Link>
+              </SignedIn>
+              
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <Button variant="ghost" size="sm" className="w-full justify-start text-sm font-medium">Sign In</Button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <Button size="sm" className="w-full justify-start text-sm font-medium mt-2">Get Started</Button>
+                </SignUpButton>
+              </SignedOut>
             </div>
           </div>
         </>
