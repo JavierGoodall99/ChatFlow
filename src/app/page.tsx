@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { Header } from '@/components/Header';
 
 export const metadata = {
   title: 'WhatsApp Receipt Cleaner - Extract Payment Messages Easily',
@@ -10,66 +10,24 @@ export const metadata = {
 export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Header */}
-      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center">
-              <Link href="/" className="flex items-center gap-2">
-                <Image
-                  src="/icon.png"
-                  alt="WhatsApp Receipt Cleaner"
-                  width={32}
-                  height={32}
-                  className="relative"
-                  priority
-                />
-                <span className="text-xl font-semibold">WhatsApp Receipt Cleaner</span>
-              </Link>
-            </div>
-            <nav className="hidden md:flex items-center space-x-1">
-              <Link href="/cleaner" passHref>
-                <Button variant="ghost" size="sm" className="text-sm font-medium">Try It Now</Button>
-              </Link>
-              <Link href="/help" passHref>
-                <Button variant="ghost" size="sm" className="text-sm font-medium">Help & FAQ</Button>
-              </Link>
-              <Link href="https://github.com/JavierGoodall99/whatsappp-reciept-cleaner" target="_blank" passHref>
-                <Button variant="ghost" size="sm" className="text-sm font-medium">GitHub</Button>
-              </Link>
-              <Link href="/cleaner" passHref>
-                <Button size="sm" className="ml-2 text-sm font-medium">Get Started</Button>
-              </Link>
-            </nav>
-            <div className="flex md:hidden">
-              <Button variant="ghost" size="sm">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="3" y1="12" x2="21" y2="12"></line>
-                  <line x1="3" y1="6" x2="21" y2="6"></line>
-                  <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="py-20 md:py-28 bg-gradient-to-b from-muted/50 to-background">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center text-center space-y-4 md:space-y-6">
-              <h1 className="text-3xl md:text-5xl font-bold tracking-tighter max-w-3xl text-shimmer">
+        <section className="py-28 md:py-36 lg:py-44 bg-gradient-to-b from-muted/50 to-background">
+          <div className="container mx-auto px-4 md:px-6 w-full max-w-7xl">
+            <div className="flex flex-col items-center justify-center text-center space-y-6 md:space-y-8 mx-auto">
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter mx-auto max-w-4xl text-shimmer">
                 Find Payment Messages in WhatsApp Chats Instantly
               </h1>
-              <p className="text-muted-foreground text-lg md:text-xl max-w-[42rem] text-shimmer">
+              <p className="text-muted-foreground text-xl md:text-2xl mx-auto max-w-[50rem] text-shimmer">
                 A simple tool for freelancers, small business owners, and side hustlers to extract 
                 payment-related messages and turn them into clean, exportable records.
               </p>
               <Link href="/cleaner" passHref>
-                <Button size="lg" className="mt-6 gap-2">
+                <Button size="lg" className="mt-8 gap-2 text-lg px-8 py-6">
                   Try It For Free
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                     <polyline points="12 5 19 12 12 19"></polyline>
                   </svg>
@@ -81,17 +39,17 @@ export default function LandingPage() {
 
         {/* How It Works Section */}
         <section className="py-16 md:py-24 bg-background">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center text-center mb-12">
-              <h2 className="text-2xl md:text-3xl font-bold tracking-tighter">
+          <div className="container mx-auto px-4 md:px-6 w-full max-w-7xl">
+            <div className="flex flex-col items-center justify-center text-center mb-12">
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tighter mx-auto">
                 How It Works
               </h2>
-              <p className="text-muted-foreground mt-2 max-w-[58rem]">
+              <p className="text-muted-foreground mt-2 max-w-[58rem] mx-auto">
                 Extract your payment messages in three simple steps
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mx-auto">
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all flex flex-col">
                 <div className="text-blue-600 bg-blue-100 p-3 rounded-full inline-block mb-4 self-start">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -155,14 +113,14 @@ export default function LandingPage() {
 
         {/* Benefits Section */}
         <section className="py-16 md:py-24 bg-muted/50">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center text-center mb-12">
-              <h2 className="text-2xl md:text-3xl font-bold tracking-tighter">
+          <div className="container mx-auto px-4 md:px-6 w-full max-w-7xl">
+            <div className="flex flex-col items-center justify-center text-center mb-12">
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tighter mx-auto">
                 Why Use WhatsApp Receipt Cleaner?
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mx-auto">
               <div className="flex flex-col items-center text-center p-4">
                 <div className="text-3xl mb-2">⏱️</div>
                 <h3 className="text-lg font-medium mb-1">Save Time</h3>
@@ -200,12 +158,12 @@ export default function LandingPage() {
 
         {/* CTA Section */}
         <section className="py-20 bg-background">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center text-center space-y-4">
-              <h2 className="text-2xl md:text-3xl font-bold tracking-tighter">
+          <div className="container mx-auto px-4 md:px-6 w-full max-w-7xl">
+            <div className="flex flex-col items-center justify-center text-center space-y-4">
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tighter mx-auto">
                 Ready to clean up your WhatsApp payment records?
               </h2>
-              <p className="text-muted-foreground text-lg max-w-[42rem]">
+              <p className="text-muted-foreground text-lg max-w-[42rem] mx-auto">
                 Start organizing your financial messages today - it only takes a minute.
               </p>
               <Link href="/cleaner" className="mt-6" passHref>
@@ -220,10 +178,10 @@ export default function LandingPage() {
 
       {/* Feedback Section */}
       <section className="py-12 bg-muted">
-        <div className="container px-4 md:px-6">
-          <div className="flex flex-col items-center text-center space-y-4">
-            <h2 className="text-xl md:text-2xl font-bold">Help Us Improve</h2>
-            <p className="text-muted-foreground max-w-[42rem]">
+        <div className="container mx-auto px-4 md:px-6 w-full max-w-7xl">
+          <div className="flex flex-col items-center justify-center text-center space-y-4">
+            <h2 className="text-xl md:text-2xl font-bold mx-auto">Help Us Improve</h2>
+            <p className="text-muted-foreground max-w-[42rem] mx-auto">
               Found a bug or have a feature request? We&apos;d love to hear from you!
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mt-2">
@@ -246,7 +204,7 @@ export default function LandingPage() {
       </section>
 
       <footer className="border-t py-6 md:py-0">
-        <div className="container px-4 md:px-6">
+        <div className="container mx-auto px-4 md:px-6 w-full max-w-7xl">
           <div className="flex flex-col md:flex-row justify-between items-center md:h-16 gap-4 md:gap-0">
             <p className="text-sm text-muted-foreground">
               © {new Date().getFullYear()} WhatsApp Receipt Cleaner. All rights reserved.
