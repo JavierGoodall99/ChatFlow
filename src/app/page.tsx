@@ -1,14 +1,13 @@
+'use client';
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
-
-export const metadata = {
-  title: 'ChatFlow - Organize WhatsApp Business Conversations',
-  description: 'Turn WhatsApp chat exports into structured payment data, invoices, and reports - 100% private, no data stored',
-};
+import { SignInButton, SignUpButton, SignedIn, SignedOut } from '@clerk/nextjs';
 
 export default function LandingPage() {
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -24,15 +23,38 @@ export default function LandingPage() {
               <p className="text-muted-foreground text-xl md:text-2xl mx-auto max-w-[50rem] text-shimmer">
                 Turn your WhatsApp chat exports into organized payment records, professional invoices, and client summaries.
               </p>
-              <Link href="/cleaner" passHref>
-                <Button size="lg" className="mt-8 gap-2 text-lg px-8 py-6">
-                  Try it now – it&apos;s free
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
-                  </svg>
-                </Button>
-              </Link>
+              
+              <SignedIn>
+                <Link href="/cleaner" passHref>
+                  <Button size="lg" className="mt-8 gap-2 text-lg px-8 py-6">
+                    Go to Dashboard
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                      <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                  </Button>
+                </Link>
+              </SignedIn>
+              
+              <SignedOut>
+                <div className="flex flex-wrap gap-4 mt-8 justify-center">
+                  <SignUpButton mode="modal">
+                    <Button size="lg" className="gap-2 text-lg px-8 py-6">
+                      Get Started – Free
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                      </svg>
+                    </Button>
+                  </SignUpButton>
+                  
+                  <SignInButton mode="modal">
+                    <Button size="lg" variant="outline" className="text-lg px-8 py-6">
+                      Sign In
+                    </Button>
+                  </SignInButton>
+                </div>
+              </SignedOut>
             </div>
           </div>
         </section>
@@ -351,15 +373,32 @@ export default function LandingPage() {
               <p className="text-muted-foreground text-lg max-w-[42rem] mx-auto">
                 Start organizing your payment messages and generating professional invoices in minutes.
               </p>
-              <Link href="/cleaner" className="mt-6" passHref>
-                <Button size="lg" className="px-8 py-6 text-lg gap-2">
-                  Try It Now
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                    <polyline points="12 5 19 12 12 19"></polyline>
-                  </svg>
-                </Button>
-              </Link>
+              
+              <SignedIn>
+                <Link href="/cleaner" className="mt-6" passHref>
+                  <Button size="lg" className="px-8 py-6 text-lg gap-2">
+                    Go to Dashboard
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                      <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                  </Button>
+                </Link>
+              </SignedIn>
+              
+              <SignedOut>
+                <div className="flex flex-wrap gap-4 mt-6 justify-center">
+                  <SignUpButton mode="modal">
+                    <Button size="lg" className="px-8 py-6 text-lg gap-2">
+                      Create Free Account
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                      </svg>
+                    </Button>
+                  </SignUpButton>
+                </div>
+              </SignedOut>
             </div>
           </div>
         </section>

@@ -13,6 +13,7 @@
     "postbuild": "next-sitemap"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.15.0",
     "@next/bundle-analyzer": "^15.3.0",
     "@radix-ui/react-slot": "^1.2.0",
     "class-variance-authority": "^0.7.1",
