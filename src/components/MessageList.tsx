@@ -47,6 +47,7 @@ export function MessageList({ messages }: MessageListProps) {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [currencyFilter, setCurrencyFilter] = useState<CurrencyCode | null>(null);
+  const [sourceFilter, setSourceFilter] = useState<'text' | 'ocr' | null>(null);
   const [selectedMessages, setSelectedMessages] = useState<WhatsAppMessage[]>([]);
   const [showInvoiceForm, setShowInvoiceForm] = useState(false);
 
@@ -117,11 +118,12 @@ export function MessageList({ messages }: MessageListProps) {
     };
   }, [messages]);
 
-  // Filter messages by sender, search term, date range, and currency
+  // Filter messages by sender, search term, date range, currency, and source
   const filteredMessages = useMemo(() => {
     return messages
       .filter(msg => !currentFilter || msg.sender === currentFilter)
       .filter(msg => !currencyFilter || msg.currency === currencyFilter)
+      .filter(msg => !sourceFilter || msg.source === sourceFilter)
       .filter(msg => {
         if (!searchTerm) return true;
         const searchLower = searchTerm.toLowerCase();
@@ -142,7 +144,7 @@ export function MessageList({ messages }: MessageListProps) {
         if (!startDate && endDate) return msgDate <= endDate;
         return msgDate >= startDate && msgDate <= endDate;
       });
-  }, [messages, currentFilter, searchTerm, startDate, endDate, currencyFilter]);
+  }, [messages, currentFilter, searchTerm, startDate, endDate, currencyFilter, sourceFilter]);
 
   // Handle message selection
   const toggleMessageSelection = (message: WhatsAppMessage) => {
@@ -302,6 +304,49 @@ export function MessageList({ messages }: MessageListProps) {
               </div>
             </div>
 
+            {/* Source Filter */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-medium text-gray-500">Filter by Source</h3>
+                {sourceFilter && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs h-7 px-2 text-gray-500 hover:text-gray-700"
+                    onClick={() => setSourceFilter(null)}
+                  >
+                    Clear Source Filter
+                  </Button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={sourceFilter === null ? "default" : "outline"}
+                  size="sm"
+                  className={`text-xs h-8 px-3 ${sourceFilter === null ? 'bg-primary/10 border-primary/20 text-primary' : ''}`}
+                  onClick={() => setSourceFilter(null)}
+                >
+                  All Sources
+                </Button>
+                <Button
+                  variant={sourceFilter === 'text' ? "default" : "outline"}
+                  size="sm"
+                  className={`text-xs h-8 px-3 ${sourceFilter === 'text' ? 'bg-primary/10 border-primary/20 text-primary' : ''}`}
+                  onClick={() => setSourceFilter('text')}
+                >
+                  Text
+                </Button>
+                <Button
+                  variant={sourceFilter === 'ocr' ? "default" : "outline"}
+                  size="sm"
+                  className={`text-xs h-8 px-3 ${sourceFilter === 'ocr' ? 'bg-primary/10 border-primary/20 text-primary' : ''}`}
+                  onClick={() => setSourceFilter('ocr')}
+                >
+                  OCR
+                </Button>
+              </div>
+            </div>
+
             {/* Date Filter */}
             <div>
               <div className="flex items-center justify-between mb-4">
@@ -407,17 +452,18 @@ export function MessageList({ messages }: MessageListProps) {
                   </th>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Date</th>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Time</th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Sender</th>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Currency</th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Message</th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Description</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
                 {filteredMessages.map((message, index) => (
                   <tr 
                     key={index} 
-                    className={`hover:bg-gray-50 transition-colors ${isMessageSelected(message) ? 'bg-primary/5' : ''}`}
+                    className={`hover:bg-gray-50 transition-colors ${
+                      isMessageSelected(message) ? 'bg-primary/5' : ''
+                    } ${message.source === 'ocr' ? 'border-l-4 border-l-blue-400' : ''}`}
                     onClick={() => toggleMessageSelection(message)}
                   >
                     <td className="px-2 py-3 whitespace-nowrap">
@@ -436,14 +482,6 @@ export function MessageList({ messages }: MessageListProps) {
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
                       {message.timestamp.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-medium">
-                          {message.sender.charAt(0)}
-                        </div>
-                        <span className="ml-2 text-sm text-gray-900">{message.sender}</span>
-                      </div>
                     </td>
                     <td className="px-4 py-3 text-sm font-medium whitespace-nowrap">
                       <span className="text-green-600 font-semibold">
@@ -465,7 +503,29 @@ export function MessageList({ messages }: MessageListProps) {
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500">
                       <div className="max-w-[300px] line-clamp-2 hover:line-clamp-none">
-                        {cleanMessage(message) || <em className="text-gray-400">No additional message</em>}
+                        {message.source === 'ocr' && message.imageFilename && (
+                          <div className="mb-1 flex items-center gap-1 text-xs text-blue-600">
+                            <svg 
+                              xmlns="http://www.w3.org/2000/svg" 
+                              width="12" 
+                              height="12" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              strokeWidth="2" 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round"
+                            >
+                              <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                              <circle cx="9" cy="9" r="2" />
+                              <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                            </svg>
+                            <span className="truncate max-w-[200px]">
+                              From image: {message.imageFilename}
+                            </span>
+                          </div>
+                        )}
+                        {cleanMessage(message) || <em className="text-gray-400">No additional description</em>}
                       </div>
                     </td>
                   </tr>
@@ -493,6 +553,14 @@ export function MessageList({ messages }: MessageListProps) {
                   onClick={() => setCurrencyFilter(null)}
                 >
                   Clear Currency Filter
+                </Button>
+              )}
+              {sourceFilter && (
+                <Button
+                  variant="outline"
+                  onClick={() => setSourceFilter(null)}
+                >
+                  Clear Source Filter
                 </Button>
               )}
               {(startDate || endDate) && (

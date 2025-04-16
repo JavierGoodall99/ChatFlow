@@ -11,13 +11,19 @@ import { Footer } from '@/components/Footer';
 import type { WhatsAppMessage } from '@/lib/parseChat';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@clerk/nextjs';
+import { ImageUploadForm } from '@/components/ImageUploadForm';
 
 export default function CleanerPage() {
   const [messages, setMessages] = useState<WhatsAppMessage[]>([]);
   const { user, isLoaded } = useUser();
 
   const handleMessagesFound = (foundMessages: WhatsAppMessage[]) => {
-    setMessages(foundMessages);
+    setMessages(prevMessages => {
+      // Combine new messages with existing ones
+      const combinedMessages = [...prevMessages, ...foundMessages];
+      // Sort by timestamp (newest first)
+      return combinedMessages.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    });
   };
 
   const handleStartOver = () => {
@@ -62,9 +68,22 @@ export default function CleanerPage() {
               </div>
             </div>
           </header>
-          <div className={messages.length > 0 ? "opacity-75 scale-95 transform transition-all" : ""}>
-            <UploadForm onMessagesFound={handleMessagesFound} />
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            {/* WhatsApp Chat Upload */}
+            <div className={messages.length > 0 ? "opacity-90 scale-95 transform transition-all" : ""}>
+              <UploadForm onMessagesFound={handleMessagesFound} />
+            </div>
+            
+            {/* Receipt Image Upload - Always visible */}
+            <div className={messages.length > 0 ? "opacity-90 scale-95 transform transition-all" : ""}>
+              <ImageUploadForm 
+                imageReferences={[]} 
+                onImagesProcessed={handleMessagesFound}
+              />
+            </div>
           </div>
+          
           {messages.length > 0 && (
             <div className="mt-12 space-y-10 animate-fade-in">
               <MessageList messages={messages} />

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { WhatsAppMessage } from '@/lib/parseChat';
 import { cn } from '@/lib/utils';
+import { ImageUploadForm } from './ImageUploadForm';
 
 interface UploadFormProps {
   onMessagesFound: (messages: WhatsAppMessage[]) => void;
@@ -29,6 +30,10 @@ export function UploadForm({ onMessagesFound }: UploadFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [imageReferences, setImageReferences] = useState<string[]>([]);
+  const [textMessages, setTextMessages] = useState<WhatsAppMessage[]>([]);
+  const [showImageUpload, setShowImageUpload] = useState(false);
+  const [manualImageUpload, setManualImageUpload] = useState(false);
   const FILE_UPLOAD_ID = 'file-upload';
 
   // Reset file input when needed
@@ -42,13 +47,22 @@ export function UploadForm({ onMessagesFound }: UploadFormProps) {
   const processFile = async (file: File) => {
     const text = await file.text();
     const { parseChat } = await import('@/lib/parseChat');
-    const messages = parseChat(text);
+    const result = parseChat(text);
     
-    if (messages.length === 0) {
+    if (result.messages.length === 0) {
       throw new Error('No payment messages found in the chat. Make sure the file contains messages with currency amounts.');
     }
     
-    return messages;
+    // Check if the chat contains image references
+    if (result.imageReferences.length > 0) {
+      setImageReferences(result.imageReferences);
+      setShowImageUpload(true);
+    }
+    
+    // Store text messages for later combination with OCR results
+    setTextMessages(result.messages);
+    
+    return result.messages;
   };
 
   const handleFileUpload = async (file: File) => {
@@ -56,8 +70,14 @@ export function UploadForm({ onMessagesFound }: UploadFormProps) {
       setIsLoading(true);
       setError(null);
       setSelectedFile(file);
+      setImageReferences([]);
       
-      // Process file with minimum 3 second loading time
+      // Don't reset manual image upload state when it's explicitly enabled
+      if (!manualImageUpload) {
+        setShowImageUpload(false);
+      }
+      
+      // Process file with minimum 2.5 second loading time
       const messages = await withMinimumLoadingTime(processFile(file), 2500);
       onMessagesFound(messages);
       
@@ -94,6 +114,16 @@ export function UploadForm({ onMessagesFound }: UploadFormProps) {
     if (fileInput) {
       fileInput.value = '';
     }
+  };
+
+  // Handle OCR messages and combine with text-based messages
+  const handleImagesProcessed = (ocrMessages: WhatsAppMessage[]) => {
+    // Combine OCR results with text messages
+    const combinedMessages = [...textMessages, ...ocrMessages];
+    // Sort by timestamp (newest first)
+    const sortedMessages = combinedMessages.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    // Update the parent component with the combined messages
+    onMessagesFound(sortedMessages);
   };
 
   return (
@@ -302,7 +332,45 @@ export function UploadForm({ onMessagesFound }: UploadFormProps) {
             Need help exporting your chat?
           </a>
         </div>
+        
+        {/* Manual Image Upload Button */}
+        {textMessages.length > 0 && !showImageUpload && (
+          <div className="mt-6 text-center">
+            <button
+              onClick={() => setManualImageUpload(true)}
+              className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/90 transition-colors"
+              type="button"
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width="16" 
+                height="16" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+              >
+                <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                <circle cx="9" cy="9" r="2" />
+                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+              </svg>
+              Add Receipt Images
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Image Upload Form - shown when chat contains image references or manual upload is requested */}
+      {(showImageUpload || manualImageUpload) && (
+        <div className="mt-8">
+          <ImageUploadForm 
+            imageReferences={imageReferences}
+            onImagesProcessed={handleImagesProcessed}
+          />
+        </div>
+      )}
     </div>
   );
 }

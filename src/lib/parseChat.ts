@@ -76,9 +76,24 @@ export const WhatsAppMessageSchema = z.object({
     'ZAR', 'USD', 'EUR', 'GBP', 'AUD', 'INR', 
     'BRL', 'CNY', 'JPY', 'NGN', 'RUB', 'SAR'
   ]),
+  // Source of the message - text or OCR
+  source: z.enum(['text', 'ocr']).default('text'),
+  // Optional image data if the message is from OCR
+  imageData: z.string().optional(),
+  // Optional filename reference for the original image (if applicable)
+  imageFilename: z.string().optional(),
 });
 
-export type WhatsAppMessage = z.infer<typeof WhatsAppMessageSchema>;
+export interface WhatsAppMessage {
+  timestamp: Date;
+  sender: string;
+  content: string;
+  amount: number;
+  currency: CurrencyCode;
+  source: 'text' | 'ocr';
+  imageFilename?: string;
+  confidence?: number; // For OCR results, confidence level 0-1
+}
 
 // Create more flexible currency patterns with additional formats
 function createCurrencyPattern(symbol: string, altFormats: readonly string[]): RegExp[] {
@@ -210,10 +225,13 @@ function containsPaymentMethodKeyword(text: string): boolean {
   return PAYMENT_METHOD_KEYWORDS.some(keyword => lowerText.includes(keyword.toLowerCase()));
 }
 
-export function parseChat(content: string): WhatsAppMessage[] {
+export function parseChat(content: string): { 
+  messages: WhatsAppMessage[], 
+  imageReferences: string[] 
+} {
   if (!content || content.trim().length === 0) {
     console.error('Empty content provided to parseChat');
-    return [];
+    return { messages: [], imageReferences: [] };
   }
 
   console.log('Starting to parse chat content...');
@@ -221,7 +239,11 @@ export function parseChat(content: string): WhatsAppMessage[] {
   console.log(`Found ${lines.length} lines in chat`);
   
   const messages: WhatsAppMessage[] = [];
+  const imageReferences: string[] = [];
   let skippedLines = 0;
+  
+  // Regular expression to detect image attachments in WhatsApp chat
+  const imageAttachmentRegex = /<attached: (.+\.(jpg|jpeg|png|gif))>/i;
   
   for (const line of lines) {
     try {
@@ -229,6 +251,17 @@ export function parseChat(content: string): WhatsAppMessage[] {
       if (!line.trim()) {
         skippedLines++;
         continue;
+      }
+
+      // Check for image attachment references
+      const imageMatch = line.match(imageAttachmentRegex);
+      if (imageMatch && imageMatch[1]) {
+        const imageFilename = imageMatch[1].trim();
+        // Add to our list of referenced images if not already included
+        if (!imageReferences.includes(imageFilename)) {
+          imageReferences.push(imageFilename);
+        }
+        // Continue processing the rest of the line for possible payment information
       }
 
       // WhatsApp format variations with more flexibility
@@ -386,12 +419,21 @@ export function parseChat(content: string): WhatsAppMessage[] {
         dateStr = new Date().toISOString();
       }
       
+      // Check for image attachment in this message
+      let imageFilename: string | undefined = undefined;
+      const msgImageMatch = messageContent.match(imageAttachmentRegex);
+      if (msgImageMatch && msgImageMatch[1]) {
+        imageFilename = msgImageMatch[1].trim();
+      }
+      
       messages.push({
         timestamp: new Date(dateStr),
         sender,
         content: messageContent,
         amount: foundAmount,
         currency: foundCurrency,
+        source: 'text',
+        imageFilename
       });
       
       console.log('Successfully parsed message:', messages[messages.length - 1]);
@@ -404,5 +446,8 @@ export function parseChat(content: string): WhatsAppMessage[] {
   }
   
   console.log(`Parsing complete. Found ${messages.length} payment messages. Skipped ${skippedLines} lines.`);
-  return messages.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+  return { 
+    messages: messages.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()),
+    imageReferences
+  };
 }
