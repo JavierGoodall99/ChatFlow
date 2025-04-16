@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { WhatsAppMessage } from '@/lib/parseChat';
 import { cn } from '@/lib/utils';
-import { ImageUploadForm } from './ImageUploadForm';
 
 interface UploadFormProps {
   onMessagesFound: (messages: WhatsAppMessage[]) => void;
@@ -30,10 +29,6 @@ export function UploadForm({ onMessagesFound }: UploadFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [imageReferences, setImageReferences] = useState<string[]>([]);
-  const [textMessages, setTextMessages] = useState<WhatsAppMessage[]>([]);
-  const [showImageUpload, setShowImageUpload] = useState(false);
-  const [manualImageUpload, setManualImageUpload] = useState(false);
   const FILE_UPLOAD_ID = 'file-upload';
 
   // Reset file input when needed
@@ -53,15 +48,6 @@ export function UploadForm({ onMessagesFound }: UploadFormProps) {
       throw new Error('No payment messages found in the chat. Make sure the file contains messages with currency amounts.');
     }
     
-    // Check if the chat contains image references
-    if (result.imageReferences.length > 0) {
-      setImageReferences(result.imageReferences);
-      setShowImageUpload(true);
-    }
-    
-    // Store text messages for later combination with OCR results
-    setTextMessages(result.messages);
-    
     return result.messages;
   };
 
@@ -70,12 +56,7 @@ export function UploadForm({ onMessagesFound }: UploadFormProps) {
       setIsLoading(true);
       setError(null);
       setSelectedFile(file);
-      setImageReferences([]);
-      
-      // Don't reset manual image upload state when it's explicitly enabled
-      if (!manualImageUpload) {
-        setShowImageUpload(false);
-      }
+    
       
       // Process file with minimum 2.5 second loading time
       const messages = await withMinimumLoadingTime(processFile(file), 2500);
@@ -114,16 +95,6 @@ export function UploadForm({ onMessagesFound }: UploadFormProps) {
     if (fileInput) {
       fileInput.value = '';
     }
-  };
-
-  // Handle OCR messages and combine with text-based messages
-  const handleImagesProcessed = (ocrMessages: WhatsAppMessage[]) => {
-    // Combine OCR results with text messages
-    const combinedMessages = [...textMessages, ...ocrMessages];
-    // Sort by timestamp (newest first)
-    const sortedMessages = combinedMessages.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
-    // Update the parent component with the combined messages
-    onMessagesFound(sortedMessages);
   };
 
   return (
@@ -327,50 +298,9 @@ export function UploadForm({ onMessagesFound }: UploadFormProps) {
         
         {/* Help Text */}
         <div className="text-xs text-gray-400 mt-6 text-center max-w-sm">
-          <p>Upload your WhatsApp chat export (.txt) to extract payment messages</p>
-          <a href="/help" className="text-primary hover:underline mt-1 inline-block">
-            Need help exporting your chat?
-          </a>
+          <p>Supported format: .txt</p>
         </div>
-        
-        {/* Manual Image Upload Button */}
-        {textMessages.length > 0 && !showImageUpload && (
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => setManualImageUpload(true)}
-              className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/90 transition-colors"
-              type="button"
-            >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                width="16" 
-                height="16" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-              >
-                <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
-                <circle cx="9" cy="9" r="2" />
-                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-              </svg>
-              Add Receipt Images
-            </button>
-          </div>
-        )}
       </div>
-
-      {/* Image Upload Form - shown when chat contains image references or manual upload is requested */}
-      {(showImageUpload || manualImageUpload) && (
-        <div className="mt-8">
-          <ImageUploadForm 
-            imageReferences={imageReferences}
-            onImagesProcessed={handleImagesProcessed}
-          />
-        </div>
-      )}
     </div>
   );
 }
