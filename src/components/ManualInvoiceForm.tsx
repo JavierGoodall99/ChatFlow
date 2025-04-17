@@ -120,7 +120,8 @@ export function ManualInvoiceForm({ onClose }: ManualInvoiceFormProps) {
       sender: clientName,
       content: item.description,
       amount: item.quantity * item.unitPrice,
-      currency: item.currency
+      currency: item.currency,
+      source: 'text' as const // Using const assertion to specify literal type
     }));
 
     return {
