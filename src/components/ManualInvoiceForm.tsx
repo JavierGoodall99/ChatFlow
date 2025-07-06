@@ -14,6 +14,16 @@ interface InvoiceLineItem {
   currency: CurrencyCode;
 }
 
+interface CompanyInfo {
+  name: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  phone: string;
+  email: string;
+}
+
 interface ManualInvoiceFormProps {
   onClose: () => void;
 }
@@ -33,7 +43,6 @@ export function ManualInvoiceForm({ onClose }: ManualInvoiceFormProps) {
   const [invoiceNumber, setInvoiceNumber] = useState(generateInvoiceNumber());
   const [clientName, setClientName] = useState('');
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split('T')[0]);
-  const [companyName, setCompanyName] = useState('');
   const [notes, setNotes] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>('USD');
   const [selectedTemplate, setSelectedTemplate] = useState<InvoiceTemplateID>('modern');
@@ -48,6 +57,17 @@ export function ManualInvoiceForm({ onClose }: ManualInvoiceFormProps) {
   ]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
+
+  // Company information state
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({
+    name: '',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    phone: '',
+    email: ''
+  });
 
   // Update line item currency when selected currency changes
   useEffect(() => {
@@ -128,7 +148,7 @@ export function ManualInvoiceForm({ onClose }: ManualInvoiceFormProps) {
       invoiceNumber,
       invoiceDate: new Date(invoiceDate),
       clientName,
-      companyName: companyName || 'Your Business Name',
+      companyInfo,
       messages,
       notes,
       templateId: selectedTemplate, // Include the selected template
@@ -140,6 +160,16 @@ export function ManualInvoiceForm({ onClose }: ManualInvoiceFormProps) {
     
     if (!clientName.trim()) {
       setError('Client name is required');
+      return;
+    }
+
+    if (!companyInfo.name.trim()) {
+      setError('Company name is required');
+      return;
+    }
+
+    if (!companyInfo.email.trim()) {
+      setError('Company email is required');
       return;
     }
 
@@ -166,7 +196,7 @@ export function ManualInvoiceForm({ onClose }: ManualInvoiceFormProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm animate-fade-in p-4">
-      <div className="bg-white rounded-xl shadow-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-lg max-w-5xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-gray-900">Create Manual Invoice</h2>
@@ -212,88 +242,181 @@ export function ManualInvoiceForm({ onClose }: ManualInvoiceFormProps) {
                 ))}
               </div>
             </div>
+
+            {/* Company Information Section */}
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Company Information</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
+                    Company Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="companyName"
+                    value={companyInfo.name}
+                    onChange={(e) => setCompanyInfo(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
+                    placeholder="Your Business Name"
+                    required
+                  />
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label htmlFor="companyAddress" className="block text-sm font-medium text-gray-700 mb-1">
+                    Street Address
+                  </label>
+                  <input
+                    type="text"
+                    id="companyAddress"
+                    value={companyInfo.address}
+                    onChange={(e) => setCompanyInfo(prev => ({ ...prev, address: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
+                    placeholder="123 Business Street"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="companyCity" className="block text-sm font-medium text-gray-700 mb-1">
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    id="companyCity"
+                    value={companyInfo.city}
+                    onChange={(e) => setCompanyInfo(prev => ({ ...prev, city: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
+                    placeholder="City"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="companyState" className="block text-sm font-medium text-gray-700 mb-1">
+                    State/Province
+                  </label>
+                  <input
+                    type="text"
+                    id="companyState"
+                    value={companyInfo.state}
+                    onChange={(e) => setCompanyInfo(prev => ({ ...prev, state: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
+                    placeholder="State"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="companyZip" className="block text-sm font-medium text-gray-700 mb-1">
+                    ZIP/Postal Code
+                  </label>
+                  <input
+                    type="text"
+                    id="companyZip"
+                    value={companyInfo.zipCode}
+                    onChange={(e) => setCompanyInfo(prev => ({ ...prev, zipCode: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
+                    placeholder="12345"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="companyPhone" className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    id="companyPhone"
+                    value={companyInfo.phone}
+                    onChange={(e) => setCompanyInfo(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
+                    placeholder="(123) 456-7890"
+                  />
+                </div>
+                
+                <div className="md:col-span-2">
+                  <label htmlFor="companyEmail" className="block text-sm font-medium text-gray-700 mb-1">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    id="companyEmail"
+                    value={companyInfo.email}
+                    onChange={(e) => setCompanyInfo(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
+                    placeholder="contact@yourbusiness.com"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
             
             {/* Invoice details section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="invoiceNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                  Invoice Number
-                </label>
-                <input
-                  type="text"
-                  id="invoiceNumber"
-                  value={invoiceNumber}
-                  onChange={(e) => setInvoiceNumber(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="invoiceDate" className="block text-sm font-medium text-gray-700 mb-1">
-                  Invoice Date
-                </label>
-                <input
-                  type="date"
-                  id="invoiceDate"
-                  value={invoiceDate}
-                  onChange={(e) => setInvoiceDate(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-                  required
-                />
-              </div>
-            </div>
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Invoice Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="invoiceNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                    Invoice Number
+                  </label>
+                  <input
+                    type="text"
+                    id="invoiceNumber"
+                    value={invoiceNumber}
+                    onChange={(e) => setInvoiceNumber(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="invoiceDate" className="block text-sm font-medium text-gray-700 mb-1">
+                    Invoice Date
+                  </label>
+                  <input
+                    type="date"
+                    id="invoiceDate"
+                    value={invoiceDate}
+                    onChange={(e) => setInvoiceDate(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
+                    required
+                  />
+                </div>
 
-            {/* Client and company information */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="clientName" className="block text-sm font-medium text-gray-700 mb-1">
-                  Client Name
-                </label>
-                <input
-                  type="text"
-                  id="clientName"
-                  value={clientName}
-                  onChange={(e) => setClientName(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-                  required
-                />
-              </div>
-              <div>
-                <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
-                  Your Company Name
-                </label>
-                <input
-                  type="text"
-                  id="companyName"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  placeholder="Your Business Name"
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-                />
-              </div>
-            </div>
+                <div className="md:col-span-2">
+                  <label htmlFor="clientName" className="block text-sm font-medium text-gray-700 mb-1">
+                    Client Name
+                  </label>
+                  <input
+                    type="text"
+                    id="clientName"
+                    value={clientName}
+                    onChange={(e) => setClientName(e.target.value)}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
+                    required
+                  />
+                </div>
 
-            {/* Currency selection */}
-            <div>
-              <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-1">
-                Currency
-              </label>
-              <select
-                id="currency"
-                value={selectedCurrency}
-                onChange={(e) => setSelectedCurrency(e.target.value as CurrencyCode)}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
-              >
-                {Object.entries(SUPPORTED_CURRENCIES).map(([code, { name, symbol }]) => (
-                  <option key={code} value={code}>
-                    {name} ({symbol})
-                  </option>
-                ))}
-              </select>
+                {/* Currency selection */}
+                <div className="md:col-span-2">
+                  <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-1">
+                    Currency
+                  </label>
+                  <select
+                    id="currency"
+                    value={selectedCurrency}
+                    onChange={(e) => setSelectedCurrency(e.target.value as CurrencyCode)}
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
+                  >
+                    {Object.entries(SUPPORTED_CURRENCIES).map(([code, { name, symbol }]) => (
+                      <option key={code} value={code}>
+                        {name} ({symbol})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
 
             {/* Line items section */}
-            <div>
+            <div className="border-t pt-6">
               <div className="flex items-center justify-between mb-4">
                 <label className="block text-sm font-medium text-gray-700">
                   Invoice Items
