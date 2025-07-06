@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Analytics } from "@vercel/analytics/react"
 import { Inter } from 'next/font/google'
-import { ClerkProvider } from '@clerk/nextjs'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -29,12 +28,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <ClerkProvider>
-          <main className="min-h-screen bg-background">
-            {children}
-            <Analytics />
-          </main>
-        </ClerkProvider>
+        <main className="min-h-screen bg-background">
+          {children}
+          <Analytics />
+        </main>
       </body>
     </html>
   )

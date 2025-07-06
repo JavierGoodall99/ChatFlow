@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
-import { SignInButton, SignUpButton, SignedIn, SignedOut } from '@clerk/nextjs';
 
 export default function LandingPage() {
 
@@ -24,37 +23,17 @@ export default function LandingPage() {
                 Turn your WhatsApp chat exports into organized payment records, professional invoices, and client summaries.
               </p>
               
-              <SignedIn>
+              <div className="flex flex-wrap gap-4 mt-8 justify-center">
                 <Link href="/cleaner" passHref>
-                  <Button size="lg" className="mt-8 gap-2 text-lg px-8 py-6">
-                    Go to Dashboard
+                  <Button size="lg" className="gap-2 text-lg px-8 py-6">
+                    Get Started – Free
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="5" y1="12" x2="19" y2="12"></line>
                       <polyline points="12 5 19 12 12 19"></polyline>
                     </svg>
                   </Button>
                 </Link>
-              </SignedIn>
-              
-              <SignedOut>
-                <div className="flex flex-wrap gap-4 mt-8 justify-center">
-                  <SignUpButton mode="modal">
-                    <Button size="lg" className="gap-2 text-lg px-8 py-6">
-                      Get Started – Free
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                      </svg>
-                    </Button>
-                  </SignUpButton>
-                  
-                  <SignInButton mode="modal">
-                    <Button size="lg" variant="outline" className="text-lg px-8 py-6">
-                      Sign In
-                    </Button>
-                  </SignInButton>
-                </div>
-              </SignedOut>
+              </div>
             </div>
           </div>
         </section>
@@ -374,31 +353,17 @@ export default function LandingPage() {
                 Start organizing your payment messages and generating professional invoices in minutes.
               </p>
               
-              <SignedIn>
+              <div className="flex flex-wrap gap-4 mt-6 justify-center">
                 <Link href="/cleaner" className="mt-6" passHref>
                   <Button size="lg" className="px-8 py-6 text-lg gap-2">
-                    Go to Dashboard
+                    Start Using ChatFlow
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="5" y1="12" x2="19" y2="12"></line>
                       <polyline points="12 5 19 12 12 19"></polyline>
                     </svg>
                   </Button>
                 </Link>
-              </SignedIn>
-              
-              <SignedOut>
-                <div className="flex flex-wrap gap-4 mt-6 justify-center">
-                  <SignUpButton mode="modal">
-                    <Button size="lg" className="px-8 py-6 text-lg gap-2">
-                      Create Free Account
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                      </svg>
-                    </Button>
-                  </SignUpButton>
-                </div>
-              </SignedOut>
+              </div>
             </div>
           </div>
         </section>

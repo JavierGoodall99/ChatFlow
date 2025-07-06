@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { SignInButton, SignUpButton, SignedIn, SignedOut } from '@clerk/nextjs';
 import Link from 'next/link';
 
 export function Footer() {
@@ -21,29 +20,11 @@ export function Footer() {
             <div className="flex flex-col space-y-4">
               <h3 className="font-semibold">Links</h3>
               <ul className="space-y-2">
-                <SignedIn>
-                  <li>
-                    <Link href="/cleaner" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                      Dashboard
-                    </Link>
-                  </li>
-                </SignedIn>
-                <SignedOut>
-                  <li>
-                    <SignUpButton mode="modal">
-                      <button className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                        Get Started
-                      </button>
-                    </SignUpButton>
-                  </li>
-                  <li>
-                    <SignInButton mode="modal">
-                      <button className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                        Sign In
-                      </button>
-                    </SignInButton>
-                  </li>
-                </SignedOut>
+                <li>
+                  <Link href="/cleaner" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                    Dashboard
+                  </Link>
+                </li>
                 <li>
                   <Link href="/help" className="text-sm text-muted-foreground hover:text-primary transition-colors">
                     Help & FAQ
@@ -61,9 +42,6 @@ export function Footer() {
               <h3 className="font-semibold">Privacy</h3>
               <p className="text-sm text-muted-foreground">
                 100% client-side processing. Your data never leaves your device.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Authentication is handled securely by Clerk.
               </p>
             </div>
           </div>
