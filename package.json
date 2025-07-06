@@ -4,13 +4,13 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "TAILWIND_DISABLE_NATIVE=true next dev",
+    "build": "TAILWIND_DISABLE_NATIVE=true next build",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "test": "jest",
-    "analyze": "ANALYZE=true next build",
+    "analyze": "TAILWIND_DISABLE_NATIVE=true ANALYZE=true next build",
     "postbuild": "next-sitemap"
   },
   "dependencies": {
